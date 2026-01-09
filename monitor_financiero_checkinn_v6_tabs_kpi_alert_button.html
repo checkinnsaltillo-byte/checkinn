@@ -1,0 +1,1139 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover" />
+  <title>Check Inn - Monitor Financiero</title>
+  <style>
+    :root{
+      --bg:#070b14;
+      --panel:rgba(255,255,255,.06);
+      --line:rgba(255,255,255,.14);
+      --text:rgba(255,255,255,.92);
+      --muted:rgba(255,255,255,.65);
+      --good:#3ddc97; --warn:#ffcc66; --bad:#ff6b6b;
+      --accent:#6ae4ff; --accent2:#7c5cff;
+      --shadow: 0 18px 55px rgba(0,0,0,.38);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; color:var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(1100px 750px at 10% 0%, rgba(106,228,255,.18), transparent 55%),
+                  radial-gradient(1000px 700px at 90% 10%, rgba(124,92,255,.18), transparent 55%),
+                  linear-gradient(180deg, var(--bg), #050814 70%);
+      min-height:100vh;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      overflow-x:hidden;
+    }
+
+    /* Top app bar */
+    .appbar{
+      position:sticky; top:0; z-index: 80;
+      padding: 10px 12px calc(10px + env(safe-area-inset-top));
+      display:flex; align-items:center; gap:10px;
+      background: rgba(7,11,20,.72);
+      backdrop-filter: blur(12px);
+      border-bottom:1px solid rgba(255,255,255,.10);
+    }
+    .appbar .t{
+      font-size:18px;
+      font-weight:850;
+      letter-spacing:.2px;
+      line-height:1.1;
+      background: linear-gradient(135deg, rgba(255,255,255,.96), rgba(255,255,255,.70));
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+      flex:1;
+      min-width:0;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .burger{
+      width:42px;height:42px;border-radius:14px;
+      border:1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.07);
+      display:grid; place-items:center;
+      cursor:pointer;
+      transition: transform .12s ease, filter .12s ease;
+      flex:0 0 auto;
+    }
+    .burger:hover{filter:brightness(1.1); transform: translateY(-1px);}
+    .burger span{
+      width:18px;height:2px;background: rgba(255,255,255,.85);
+      display:block; border-radius:2px;
+      position:relative;
+    }
+    .burger span:before,.burger span:after{
+      content:""; position:absolute; left:0; right:0; height:2px; border-radius:2px;
+      background: rgba(255,255,255,.85);
+    }
+    .burger span:before{top:-6px}
+    .burger span:after{top:6px}
+
+    /* Layout */
+    .wrap{padding:12px; padding-bottom: calc(14px + env(safe-area-inset-bottom));}
+    .card{
+      background:rgba(255,255,255,.06);
+      border:1px solid var(--line);
+      border-radius:16px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+    .main{padding:14px;}
+
+    /* Title */
+    .titleBig{
+      margin:0 0 4px 0;
+      font-size:22px;
+      font-weight:900;
+      letter-spacing: .2px;
+      line-height:1.1;
+      background: linear-gradient(135deg, rgba(255,255,255,.96), rgba(255,255,255,.70));
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+    }
+    .subtitle{color:var(--muted); font-size:12px; margin-bottom:10px;}
+
+    /* KPIs */
+    .kpis{display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;}
+    .kpi{padding:12px; background: rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.12); border-radius:16px;}
+    .kpi .t{color:var(--muted); font-size:11px;}
+    .kpi .v{font-size:16px; font-weight:800; margin-top:6px;}
+    .kpi .s{color:var(--muted); font-size:11px; margin-top:4px;}
+    .kpiWide{grid-column: 1 / -1;}
+    .kpiBtn{
+      cursor:pointer;
+      transition: transform .12s ease, filter .12s ease, background .12s ease;
+    }
+    .kpiBtn:hover{filter:brightness(1.10); transform: translateY(-1px);}
+    /* KPI Alertas cuando EXISTEN alertas */
+    .kpiBtn.hasAlerts{
+      border-color: rgba(255,107,107,.55);
+      background: linear-gradient(135deg,
+        rgba(255,107,107,.25),
+        rgba(180,40,40,.35)
+      );
+      box-shadow: 0 0 0 4px rgba(255,107,107,.20);
+    }
+    .kpiBtn:active{transform: translateY(0px) scale(.995);}
+    .kpiBtn.active{
+      border-color: rgba(255,107,107,.55);
+      background: linear-gradient(135deg,
+        rgba(255,107,107,.25),
+        rgba(180,40,40,.35)
+      );
+      box-shadow: 0 0 0 4px rgba(255,107,107,.20);
+    }
+
+    .pwrap{margin-top:8px}
+    .pbar{
+      height:10px; border-radius:999px;
+      background: rgba(255,255,255,.10);
+      overflow:hidden; border:1px solid rgba(255,255,255,.14);
+      position:relative;
+    }
+    .pbar .marker{
+      position:absolute; left:50%; top:-2px; bottom:-2px;
+      width:2px; background: rgba(255,255,255,.45);
+      border-radius:2px;
+      transform: translateX(-1px);
+    }
+    .pbar i{display:block; height:100%; width:0%;}
+    .pbar.good i{background: rgba(61,220,151,.75);}
+    .pbar.warn i{background: rgba(255,204,102,.75);}
+    .pbar.bad  i{background: rgba(255,107,107,.75);}
+
+    /* Pills & controls */
+    .pill{
+      display:inline-block; padding:4px 8px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.06);
+      font-size:12px;
+      white-space:nowrap;
+    }
+    .pill.good{border-color: rgba(61,220,151,.35); background: rgba(61,220,151,.14);}
+    .pill.warn{border-color: rgba(255,204,102,.35); background: rgba(255,204,102,.14);}
+    .pill.bad {border-color: rgba(255,107,107,.35); background: rgba(255,107,107,.14);}
+
+    button{
+      padding:10px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.08); color:var(--text); cursor:pointer;
+      transition: transform .12s ease, filter .12s ease, background .12s ease;
+      font-weight:800;
+    }
+    button.primary{
+      border-color: rgba(106,228,255,.35);
+      background: linear-gradient(135deg, rgba(106,228,255,.20), rgba(124,92,255,.20));
+    }
+    button:hover{filter:brightness(1.10); transform: translateY(-1px);}
+
+    .topbar{
+      display:flex; gap:8px; padding:10px;
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:14px;
+      background: rgba(255,255,255,.05);
+      margin-top:12px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .topbar .spacer{flex:1}
+
+    /* Tabs for tipo */
+    .tabs{
+      display:flex;
+      gap:8px;
+      padding:4px;
+      border-radius:14px;
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.12);
+    }
+    .tab{
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      cursor:pointer;
+      font-weight:900;
+      font-size:12px;
+      user-select:none;
+      transition: transform .12s ease, filter .12s ease, background .12s ease;
+    }
+    .tab:hover{filter:brightness(1.10); transform: translateY(-1px);}
+    .tab.active{
+      border-color: rgba(106,228,255,.35);
+      background: linear-gradient(135deg, rgba(106,228,255,.18), rgba(124,92,255,.18));
+      box-shadow: 0 0 0 4px rgba(106,228,255,.06);
+    }
+
+    /* Tables */
+    .section-title{font-weight:850; margin:0 0 6px 0; font-size:14px;}
+    .small{font-size:12px; color:var(--muted)}
+    .hr{height:1px; background: rgba(255,255,255,.10); margin:14px 0;}
+
+    table{width:100%; border-collapse:separate; border-spacing:0; overflow:hidden; border-radius:14px;}
+    thead th{
+      text-align:left; font-size:11px; color:var(--muted);
+      background: rgba(255,255,255,.06); border-bottom:1px solid rgba(255,255,255,.10);
+      padding:10px;
+      position:sticky; top:0; z-index:2;
+    }
+    tbody td{
+      padding:10px; border-bottom:1px solid rgba(255,255,255,.08);
+      font-size:12px;
+      background: rgba(10,16,32,.35);
+      vertical-align:top;
+    }
+    tbody tr:hover td{background: rgba(255,255,255,.06);}
+    tbody tr.selected td{outline: 2px solid rgba(106,228,255,.35); background: rgba(106,228,255,.08);}
+    .num{text-align:right; font-variant-numeric: tabular-nums;}
+
+    /* Mobile-first: stacked panels; Desktop: side by side */
+    .grid{display:grid; grid-template-columns: 1fr; gap:12px; margin-top:12px;}
+    .panel{padding:12px; background: rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.12); border-radius:16px;}
+
+    .scroll{
+      overflow:auto;
+      border-radius:14px;
+      min-height: 260px;
+      max-height: 56vh;
+      resize: vertical;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    @media (min-width: 1024px){
+      .wrap{padding:16px;}
+      .titleBig{font-size:28px;}
+      .subtitle{font-size:13px;}
+      .kpis{grid-template-columns: 1fr 1fr 1fr 1fr;}
+      .kpiWide{grid-column:auto;}
+      .grid{grid-template-columns: 2fr 1fr;}
+      .appbar .t{font-size:20px;}
+    }
+
+    /* Drawer (hamburger menu ONLY) */
+    .overlay{
+      display:none;
+      position:fixed; inset:0;
+      background: rgba(0,0,0,.50);
+      z-index: 90;
+    }
+    .overlay.show{display:block;}
+    .drawer{
+      position:fixed; top:0; left:0;
+      width: min(420px, 92vw);
+      height:100vh;
+      background: rgba(12,18,34,.96);
+      border-right:1px solid rgba(255,255,255,.14);
+      box-shadow: 0 18px 55px rgba(0,0,0,.55);
+      backdrop-filter: blur(12px);
+      padding:14px;
+      transform: translateX(-105%);
+      transition: transform .18s ease;
+      z-index: 100;
+      overflow:auto;
+      border-radius: 0 18px 18px 0;
+    }
+    .drawer.show{transform: translateX(0);}
+    .closeRow{display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px;}
+    .closeRow .h{font-weight:900; font-size:14px;}
+    .closeBtn{padding:9px 10px; border-radius:12px; border:1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.08); color:var(--text); cursor:pointer;}
+
+    /* Filter blocks */
+    .brand{
+      display:flex; gap:12px; align-items:center; padding:10px 10px 12px;
+      border-bottom:1px solid rgba(255,255,255,.10);
+      margin:-6px -6px 10px;
+    }
+    .logo{
+      width:34px;height:34px;border-radius:12px;
+      background: linear-gradient(135deg, rgba(106,228,255,.65), rgba(124,92,255,.65));
+      box-shadow: 0 0 0 8px rgba(106,228,255,.10), 0 0 22px rgba(124,92,255,.25);
+    }
+    .brand h1{margin:0; font-size:16px; letter-spacing:.2px;}
+    .brand .sub{color:var(--muted); font-size:12px; margin-top:2px;}
+
+    label{display:block; font-size:12px; color:var(--muted); margin:10px 0 6px;}
+    .searchInput{
+      width:100%;
+      padding:11px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06); color: var(--text);
+      outline:none;
+    }
+
+    details.fblock{
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.04);
+      border-radius:14px;
+      padding:10px 10px;
+      margin-top:10px;
+    }
+    details.fblock > summary{
+      cursor:pointer;
+      list-style:none;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      font-weight:900;
+      font-size:12px;
+      color: rgba(255,255,255,.82);
+    }
+    details.fblock > summary::-webkit-details-marker{display:none;}
+    .chev{opacity:.8}
+
+    .comboPanel{
+      margin-top:10px;
+      background: rgba(12,18,34,.55);
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:14px;
+      padding:10px;
+      max-height: 260px;
+      overflow:auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .comboTop{
+      display:flex; gap:8px; align-items:center; margin-bottom:8px;
+      position:sticky; top:0;
+      background: rgba(12,18,34,.85);
+      padding:4px 0 8px;
+      border-bottom: 1px solid rgba(255,255,255,.10);
+      z-index: 2;
+    }
+    .comboTop input{
+      flex:1;
+      padding:9px 10px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      outline:none;
+      min-width:0;
+    }
+    .toggleAll{
+      padding:8px 10px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.08);
+      font-size:12px;
+      white-space:nowrap;
+      cursor:pointer;
+      user-select:none;
+      flex:0 0 auto;
+    }
+    .toggleAll.on{
+      border-color: rgba(106,228,255,.40);
+      background: linear-gradient(135deg, rgba(106,228,255,.18), rgba(124,92,255,.18));
+      box-shadow: 0 0 0 4px rgba(106,228,255,.08);
+      font-weight:900;
+    }
+
+    .opt{
+      display:flex; gap:10px; align-items:center;
+      padding:8px 8px;
+      border-radius:10px;
+      cursor:pointer;
+      user-select:none;
+    }
+    .opt:hover{background: rgba(255,255,255,.06);}
+    .opt input{width:16px; height:16px;}
+    .opt span{font-size:13px;}
+
+    .status{margin-top:10px; font-size:12px; color:var(--muted);}
+    .dot{display:inline-block; width:8px; height:8px; border-radius:999px; background:var(--accent); margin-right:6px;}
+    .btns{display:flex; gap:8px; margin-top:12px; flex-wrap:wrap}
+    .hide{display:none !important;}
+  </style>
+</head>
+<body>
+  <div class="appbar">
+    <button class="burger" id="btnBurger" title="Abrir filtros"><span></span></button>
+    <div class="t">Check Inn - Monitor Financiero</div>
+    <button class="primary" id="btnRefreshTop" title="Actualizar datos">Actualizar</button>
+  </div>
+
+  <div class="overlay" id="overlay"></div>
+  <aside class="drawer" id="drawer" aria-label="Filtros">
+    <div class="closeRow">
+      <div class="h">Filtros de consulta</div>
+      <button class="closeBtn" id="btnCloseDrawer">Cerrar</button>
+    </div>
+
+    <div class="brand">
+      <div class="logo"></div>
+      <div>
+        <h1>Check Inn</h1>
+        <div class="sub">Monitor Financiero</div>
+      </div>
+    </div>
+
+    <button class="primary" id="btnRefresh" style="width:100%;">Actualizar datos</button>
+    <div class="status" id="status"><span class="dot"></span>Listo</div>
+
+    <details class="fblock" id="dMes" open>
+      <summary>Mes <span class="chev">▾</span></summary>
+      <div class="comboPanel" data-filter="Mes" data-label="cMesLbl">
+        <div class="comboTop">
+          <input type="text" placeholder="Buscar…" />
+          <div class="toggleAll on" data-action="toggle">Seleccionar todo</div>
+        </div>
+        <div class="opts"></div>
+        <div class="small" style="margin-top:8px;"><span id="cMesLbl">Todos</span></div>
+      </div>
+    </details>
+
+    <details class="fblock" id="dCat" open>
+      <summary>Categoría <span class="chev">▾</span></summary>
+      <div class="comboPanel" data-filter="CATEGORIA" data-label="cCatLbl">
+        <div class="comboTop">
+          <input type="text" placeholder="Buscar…" />
+          <div class="toggleAll on" data-action="toggle">Seleccionar todo</div>
+        </div>
+        <div class="opts"></div>
+        <div class="small" style="margin-top:8px;"><span id="cCatLbl">Todos</span></div>
+      </div>
+    </details>
+
+    <details class="fblock" id="dCon" open>
+      <summary>Concepto <span class="chev">▾</span></summary>
+      <div class="comboPanel" data-filter="CONCEPTO" data-label="cConLbl">
+        <div class="comboTop">
+          <input type="text" placeholder="Buscar…" />
+          <div class="toggleAll on" data-action="toggle">Seleccionar todo</div>
+        </div>
+        <div class="opts"></div>
+        <div class="small" style="margin-top:8px;"><span id="cConLbl">Todos</span></div>
+      </div>
+    </details>
+
+    <details class="fblock" id="dCta" open>
+      <summary>Cuenta bancaria <span class="chev">▾</span></summary>
+      <div class="comboPanel" data-filter="Cuenta bancaria" data-label="cCtaLbl">
+        <div class="comboTop">
+          <input type="text" placeholder="Buscar…" />
+          <div class="toggleAll on" data-action="toggle">Seleccionar todo</div>
+        </div>
+        <div class="opts"></div>
+        <div class="small" style="margin-top:8px;"><span id="cCtaLbl">Todos</span></div>
+      </div>
+    </details>
+
+    <label>Buscar (Categoría/Concepto/Cuenta)</label>
+    <input id="q" class="searchInput" placeholder="ej. limpieza, bbva, stripe..." />
+
+    <div class="btns">
+      <button id="btnReset">Reset filtros</button>
+    </div>
+  </aside>
+
+  <!-- hidden tipo control used by logic -->
+  <input id="fTipo" value="E" style="display:none" />
+
+  <div class="wrap">
+    <section class="card main">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">
+        <div>
+          <div class="titleBig">Monitor Financiero - Check Inn</div>
+          <div class="subtitle">Egresos/Ingresos como pestañas. Alertas desde el KPI.</div>
+        </div>
+        <div class="small" id="lastUpdate">—</div>
+      </div>
+
+      <div class="kpis">
+        <div class="kpi">
+          <div class="t"><span id="kLabelReal">Egresos</span> (selección)</div>
+          <div class="v" id="kReal">$0</div>
+          <div class="s" id="kRows">0 filas</div>
+        </div>
+        <div class="kpi">
+          <div class="t"><span id="kLabelBud">Presupuesto mensual</span> (selección)</div>
+          <div class="v" id="kBudM">$0</div>
+          <div class="s" id="kBudDesc">—</div>
+        </div>
+        <div class="kpi kpiWide">
+          <div class="t" id="kLabelAnnual">Avance ANUAL</div>
+          <div class="v" id="kAvY">—</div>
+          <div class="s" id="kAvYS">—</div>
+          <div class="pwrap">
+            <div class="pbar" id="pAnnual"><div class="marker" title="100%"></div><i></i></div>
+          </div>
+        </div>
+        <div class="kpi kpiWide kpiBtn" id="kpiAlertas" role="button" aria-label="Ver alertas" title="Click para ver alertas">
+          <div class="t">Alertas</div>
+          <div class="v" id="kAl">0</div>
+          <div class="s" id="kAlDesc">—</div>
+          <div class="s" style="margin-top:6px; color:rgba(255,255,255,.75);">Click para abrir/cerrar</div>
+        </div>
+      </div>
+
+      <div class="topbar">
+        <div class="tabs" role="tablist" aria-label="Tipo">
+          <div class="tab active" id="tabE" role="tab" aria-selected="true">Egresos</div>
+          <div class="tab" id="tabI" role="tab" aria-selected="false">Ingresos</div>
+        </div>
+        <span class="pill" id="tipoPill">Tipo: Egresos</span>
+        <span class="pill">Orden: Categoría → Concepto</span>
+        <span class="spacer"></span>
+        <span class="pill" id="viewPill">Vista: Detalle</span>
+      </div>
+
+      <div class="grid">
+        <div class="panel">
+          <div class="section-title" id="mainTableTitle">Egresos (Presupuesto vs Real)</div>
+          <div class="small" id="mainTableSub">Real y presupuesto en positivo (valor absoluto).</div>
+          <div class="scroll" id="scrollMain" style="margin-top:10px;">
+            <table>
+              <thead><tr id="theadRow"></tr></thead>
+              <tbody id="tbMain"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="section-title" id="rightTitle">Detalle (drilldown)</div>
+          <div class="small" id="rightSub">Selecciona un renglón para ver los movimientos que lo componen.</div>
+          <div class="hr"></div>
+
+          <div id="rightDetalle">
+            <div id="selInfo" class="small" style="color:var(--muted)">Sin selección.</div>
+            <div class="scroll" style="margin-top:10px; max-height: 52vh;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Mes</th><th>Cuenta</th><th>TIPO</th><th>Categoría</th><th>Concepto</th><th>Factura</th><th class="num">Monto</th>
+                  </tr>
+                </thead>
+                <tbody id="tbD"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="rightAlertas" class="hide">
+            <div id="alertInfo" class="small" style="color:var(--muted)">Alertas del tipo seleccionado.</div>
+            <div class="scroll" style="margin-top:10px; max-height: 52vh;">
+              <table>
+                <thead>
+                  <tr><th>Tipo</th><th>Categoría</th><th>Concepto</th><th>Mes</th><th class="num">%</th><th>Sev</th></tr>
+                </thead>
+                <tbody id="tbA"></tbody>
+              </table>
+            </div>
+            <div class="small" style="margin-top:8px; color:var(--muted)">Tip: click en una alerta para abrir su detalle.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    window.DATA_ENDPOINT = "https://script.google.com/macros/s/AKfycbwmlnws66Fz008rDTX9nWmvUEd6akvfT7e_ejgT85MGDAzx3c8iWNjHj05nS2W0qB8_cw/exec"; // pega tu /exec
+
+    let RAW = [];
+    let BUDGET = [];
+    let SELECTED_KEY = null;
+    let SELECTED_SOURCE = 'E';
+    let CURRENT_VIEW = 'detalle';
+
+    const $ = (id)=>document.getElementById(id);
+    const fmtMoney = (x)=> (Number(x||0)).toLocaleString('es-MX',{style:'currency',currency:'MXN'});
+    const fmtPct = (x)=> isFinite(x) ? (x*100).toFixed(1)+'%' : '—';
+    const norm = (s)=> String(s??'').trim();
+    function yearFromMes(mes){
+      const m = String(mes||"").match(/(\d{4})\s*$/);
+      return m ? m[1] : "";
+    }
+    function sevOver(av){
+      if(!isFinite(av)) return {label:'—', cls:'pill'};
+      if(av<=1.0) return {label:'OK', cls:'pill good'};
+      if(av<=1.10) return {label:'Alerta', cls:'pill warn'};
+      return {label:'Crítico', cls:'pill bad'};
+    }
+    function sevUnder(av){
+      if(!isFinite(av)) return {label:'—', cls:'pill'};
+      if(av>=1.0) return {label:'OK', cls:'pill good'};
+      if(av>=0.90) return {label:'Alerta', cls:'pill warn'};
+      return {label:'Crítico', cls:'pill bad'};
+    }
+    function pbarClassOver(av){
+      if(!isFinite(av)) return 'pbar';
+      if(av<=1.0) return 'pbar good';
+      if(av<=1.10) return 'pbar warn';
+      return 'pbar bad';
+    }
+    function pbarClassUnder(av){
+      if(!isFinite(av)) return 'pbar';
+      if(av>=1.0) return 'pbar good';
+      if(av>=0.90) return 'pbar warn';
+      return 'pbar bad';
+    }
+
+    const FILTER_STATE = {
+      Mes: new Set(),
+      CATEGORIA: new Set(),
+      CONCEPTO: new Set(),
+      "Cuenta bancaria": new Set(),
+      q: ""
+    };
+
+    function tipoVal(){ return ($('fTipo').value || 'E'); }
+    function setTipo(v){
+      $('fTipo').value = v;
+      SELECTED_KEY = null;
+      setRightView('detalle');
+      syncTipoUI();
+      render();
+    }
+
+    async function loadLive(){
+      if(!window.DATA_ENDPOINT || window.DATA_ENDPOINT.includes("PASTE_YOUR")) {
+        $('status').innerHTML = '<span class="dot"></span>Pega tu URL en window.DATA_ENDPOINT';
+        return false;
+      }
+      try{
+        $('status').innerHTML = '<span class="dot"></span>Cargando…';
+        const res = await fetch(window.DATA_ENDPOINT, {cache:'no-store'});
+        if(!res.ok) throw new Error('HTTP '+res.status);
+        const payload = await res.json();
+        RAW = payload.records || [];
+        BUDGET = payload.budget || [];
+        $('status').innerHTML = '<span class="dot"></span>Online (manual)';
+        return true;
+      }catch(e){
+        console.warn('Fetch falló:', e);
+        $('status').innerHTML = '<span class="dot"></span>Error al actualizar (ver consola)';
+        return false;
+      }
+    }
+
+    function uniqSorted(arr){
+      return [...new Set(arr.map(norm).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es'));
+    }
+    function getAllValuesForFilter(name){
+      if(name==='Mes') return uniqSorted(RAW.map(r=>r.Mes));
+      if(name==='CATEGORIA') return uniqSorted(RAW.map(r=>r.CATEGORIA));
+      if(name==='CONCEPTO') return uniqSorted(RAW.map(r=>r.CONCEPTO));
+      if(name==='Cuenta bancaria') return uniqSorted(RAW.map(r=>r['Cuenta bancaria']));
+      return [];
+    }
+
+    function updateAllLabels(){
+      const map = {Mes:'cMesLbl',CATEGORIA:'cCatLbl',CONCEPTO:'cConLbl','Cuenta bancaria':'cCtaLbl'};
+      for(const k in map){
+        const all = getAllValuesForFilter(k);
+        const sel = FILTER_STATE[k].size;
+        let t = 'Todos';
+        if(sel===0) t = 'Ninguno';
+        else if(sel===all.length) t = 'Todos ('+all.length+')';
+        else t = sel + ' seleccionados';
+        $(map[k]).textContent = t;
+      }
+    }
+
+    function refreshToggleButtons(){
+      document.querySelectorAll('.comboPanel').forEach(panel=>{
+        const filterName = panel.dataset.filter;
+        const all = getAllValuesForFilter(filterName);
+        const btn = panel.querySelector('.toggleAll');
+        if(!btn) return;
+        const isAll = FILTER_STATE[filterName].size === all.length && all.length>0;
+        btn.classList.toggle('on', isAll);
+      });
+    }
+
+    function initFilterPanels(){
+      document.querySelectorAll('.comboPanel').forEach(panel=>{
+        const filterName = panel.dataset.filter;
+        const search = panel.querySelector('.comboTop input');
+        const toggle = panel.querySelector('.toggleAll');
+        const optsWrap = panel.querySelector('.opts');
+
+        function renderOpts(){
+          const allValues = getAllValuesForFilter(filterName);
+          const q = norm(search.value).toLowerCase();
+          optsWrap.innerHTML = '';
+          for(const v of allValues){
+            if(q && !v.toLowerCase().includes(q)) continue;
+            const row = document.createElement('div');
+            row.className = 'opt';
+            const checked = FILTER_STATE[filterName].has(v);
+            row.innerHTML = `<input type="checkbox" ${checked?'checked':''} /> <span>${v}</span>`;
+            row.addEventListener('click', (ev)=>{
+              const cb = row.querySelector('input');
+              if(ev.target !== cb) cb.checked = !cb.checked;
+              if(cb.checked) FILTER_STATE[filterName].add(v);
+              else FILTER_STATE[filterName].delete(v);
+              updateAllLabels();
+              refreshToggleButtons();
+              render();
+            });
+            optsWrap.appendChild(row);
+          }
+        }
+
+        toggle.addEventListener('click', ()=>{
+          const allValues = getAllValuesForFilter(filterName);
+          const isAll = FILTER_STATE[filterName].size === allValues.length && allValues.length>0;
+          if(isAll) FILTER_STATE[filterName] = new Set();
+          else FILTER_STATE[filterName] = new Set(allValues);
+          updateAllLabels();
+          refreshToggleButtons();
+          renderOpts();
+          render();
+        });
+
+        search.addEventListener('input', ()=> renderOpts());
+        renderOpts();
+      });
+
+      updateAllLabels();
+      refreshToggleButtons();
+    }
+
+    function setDefaultAll(){
+      ['Mes','CATEGORIA','CONCEPTO','Cuenta bancaria'].forEach(name=>{
+        FILTER_STATE[name] = new Set(getAllValuesForFilter(name));
+      });
+      updateAllLabels();
+      refreshToggleButtons();
+    }
+
+    function budgetMap(){
+      const m = new Map();
+      for(const b of BUDGET){
+        const k = norm(b.CATEGORIA)+'||'+norm(b.CONCEPTO);
+        m.set(k, Number(b.PRESUPUESTO_MENSUAL||0));
+      }
+      return m;
+    }
+
+    function filteredRecords(ignoreMes=false, forcedYear=""){
+      const q = norm($('q').value).toLowerCase();
+      const tipo = tipoVal();
+
+      return RAW.filter(r=>{
+        const Mes = norm(r.Mes);
+        const Cat = norm(r.CATEGORIA);
+        const Con = norm(r.CONCEPTO);
+        const Cta = norm(r['Cuenta bancaria']||'');
+        const y = yearFromMes(Mes);
+        const Tipo = norm(r.TIPO||'').toLowerCase();
+
+        const ok =
+          (ignoreMes ? true : FILTER_STATE.Mes.has(Mes)) &&
+          FILTER_STATE.CATEGORIA.has(Cat) &&
+          FILTER_STATE.CONCEPTO.has(Con) &&
+          FILTER_STATE["Cuenta bancaria"].has(Cta) &&
+          (!forcedYear || y === forcedYear) &&
+          (tipo==='E' ? Tipo.includes('egr') : Tipo.includes('ing'));
+
+        if(!ok) return false;
+        if(!q) return true;
+        return (Cat+' '+Con+' '+Cta).toLowerCase().includes(q);
+      });
+    }
+
+    function aggregate(){
+      const bmap = budgetMap();
+      const recs = filteredRecords(false);
+      const tipo = tipoVal();
+
+      const g = new Map();
+      for(const r of recs){
+        const Mes = norm(r.Mes);
+        const Cta = norm(r['Cuenta bancaria']||'');
+        const Cat = norm(r.CATEGORIA);
+        const Con = norm(r.CONCEPTO);
+        const key = [Cat,Con,Mes,Cta].join('||');
+
+        const bud = bmap.get(Cat+'||'+Con) || 0;
+        const monto = Number(r.Monto||0);
+
+        if(!g.has(key)) g.set(key,{key,Cat,Con,Mes,Cta,Real:0,Bud:bud});
+        g.get(key).Real += monto;
+      }
+
+      const rows = [...g.values()].map(r=>{
+        const realAbs = Math.abs(r.Real);
+        const budAbs = Math.abs(Number(r.Bud||0));
+        const av = budAbs>0 ? (realAbs / budAbs) : NaN;
+        const sev = (tipo==='E') ? sevOver(av) : sevUnder(av);
+        return {...r, RealAbs:realAbs, BudAbs:budAbs, Av:av, Sev:sev};
+      });
+
+      rows.sort((a,b)=>{
+        const c = a.Cat.localeCompare(b.Cat,'es'); if(c!==0) return c;
+        const d = (a.Con||'').localeCompare(b.Con||'','es'); if(d!==0) return d;
+        const e = (a.Mes||'').localeCompare(b.Mes||'','es'); if(e!==0) return e;
+        return (a.Cta||'').localeCompare(b.Cta||'','es');
+      });
+
+      const real = rows.reduce((a,r)=>a+r.RealAbs,0);
+      const budM = rows.reduce((a,r)=>a+r.BudAbs,0);
+      const alerts = rows.filter(r=> r.BudAbs>0 && (tipo==='E' ? r.Av>1.0 : r.Av<1.0)).length;
+
+      const years = recs.map(r=>yearFromMes(r.Mes)).filter(Boolean);
+      let year = "";
+      if(years.length){
+        const count = new Map();
+        for(const y of years) count.set(y,(count.get(y)||0)+1);
+        year = [...count.entries()].sort((a,b)=>b[1]-a[1])[0][0];
+      }
+      const recsYear = filteredRecords(true, year);
+      const gYear = new Map();
+      for(const r of recsYear){
+        const Cat = norm(r.CATEGORIA);
+        const Con = norm(r.CONCEPTO);
+        const keyPart = Cat+'||'+Con;
+        const bud = bmap.get(keyPart) || 0;
+        const monto = Number(r.Monto||0);
+        const cur = gYear.get(keyPart) || {real:0,bud:bud};
+        gYear.set(keyPart, {real: cur.real + monto, bud});
+      }
+      const realY = [...gYear.values()].reduce((a,o)=>a+Math.abs(o.real||0),0);
+      const budY  = [...gYear.values()].reduce((a,o)=>a+Math.abs(o.bud||0)*12,0);
+      const avY = budY>0 ? (realY/budY) : NaN;
+
+      return {rows, real, budM, alerts, year, realY, budY, avY};
+    }
+
+    function setRightView(view){
+      CURRENT_VIEW = view;
+      const isDet = view === 'detalle';
+      $('rightDetalle').classList.toggle('hide', !isDet);
+      $('rightAlertas').classList.toggle('hide', isDet);
+      $('rightTitle').textContent = isDet ? 'Detalle (drilldown)' : 'Alertas';
+      $('rightSub').textContent = isDet
+        ? 'Selecciona un renglón para ver los movimientos que lo componen.'
+        : 'Listado de partidas con alerta. Click para abrir su detalle.';
+      $('viewPill').textContent = 'Vista: ' + (isDet ? 'Detalle' : 'Alertas');
+      $('kpiAlertas').classList.toggle('active', !isDet);
+    }
+
+    function syncTabs(){
+      const tipo = tipoVal();
+      const e = $('tabE'), i = $('tabI');
+      const isE = tipo==='E';
+      e.classList.toggle('active', isE);
+      i.classList.toggle('active', !isE);
+      e.setAttribute('aria-selected', isE ? 'true':'false');
+      i.setAttribute('aria-selected', isE ? 'false':'true');
+    }
+
+    function syncTipoUI(){
+      const tipo = tipoVal();
+      SELECTED_SOURCE = tipo;
+      syncTabs();
+
+      $('tipoPill').textContent = 'Tipo: ' + (tipo==='E' ? 'Egresos' : 'Ingresos');
+
+      $('mainTableTitle').textContent = (tipo==='E')
+        ? 'Egresos (Presupuesto vs Real)'
+        : 'Ingresos (Esperado vs Real)';
+      $('mainTableSub').textContent = (tipo==='E')
+        ? 'Real y presupuesto en positivo (valor absoluto).'
+        : 'Alerta si el real es menor al esperado (<100%).';
+
+      $('kLabelReal').textContent = (tipo==='E') ? 'Egresos' : 'Ingresos';
+      $('kLabelBud').textContent  = (tipo==='E') ? 'Presupuesto mensual' : 'Ingresos esperados mensuales';
+      $('kBudDesc').textContent   = (tipo==='E') ? 'Suma de presupuestos por partida' : '“Presupuesto” tratado como esperado';
+      $('kLabelAnnual').textContent = (tipo==='E') ? 'Avance ANUAL egresos' : 'Cumplimiento ANUAL ingresos';
+      $('kAlDesc').textContent = (tipo==='E') ? '>100% del presupuesto' : '<100% del esperado';
+
+      const tr = $('theadRow'); tr.innerHTML = '';
+      const cols = (tipo==='E')
+        ? ['Categoría','Concepto','Mes','Cuenta','Real','Presupuesto','Avance','Alerta']
+        : ['Categoría','Concepto','Mes','Cuenta','Real','Esperado','Cumpl.','Alerta'];
+      const numeric = new Set(['Real','Presupuesto','Esperado']);
+      cols.forEach(c=>{
+        const th = document.createElement('th');
+        th.textContent = c;
+        if(numeric.has(c)) th.className='num';
+        tr.appendChild(th);
+      });
+    }
+
+    function renderDetails(selectedKey){
+      const tb = $('tbD'); tb.innerHTML = '';
+      if(!selectedKey){ $('selInfo').textContent = 'Sin selección.'; return; }
+
+      const [Cat,Con,Mes,Cta] = selectedKey.split('||');
+      $('selInfo').innerHTML = `<span class="pill">${SELECTED_SOURCE==='E'?'Egreso':'Ingreso'}</span>
+        <span style="color:var(--muted)"> ${Cat} → ${Con||'(sin concepto)'} • ${Mes} • ${Cta}</span>`;
+
+      const rows = RAW.filter(r=>{
+        const Mes2=norm(r.Mes), Cta2=norm(r['Cuenta bancaria']||''), Tipo2=norm(r.TIPO||'').toLowerCase();
+        const Cat2=norm(r.CATEGORIA), Con2=norm(r.CONCEPTO);
+        const same = Cat2===Cat && Con2===Con && Mes2===Mes && Cta2===Cta;
+        if(!same) return false;
+        return (SELECTED_SOURCE==='E') ? Tipo2.includes('egr') : Tipo2.includes('ing');
+      });
+
+      for(const r of rows){
+        const facturaTxt = norm(r.Factura || '');
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${norm(r.Mes)}</td>
+          <td>${norm(r['Cuenta bancaria']||'')}</td>
+          <td><span class="pill">${norm(r.TIPO||'')}</span></td>
+          <td>${norm(r.CATEGORIA)}</td>
+          <td>${norm(r.CONCEPTO) || '(sin concepto)'}</td>
+          <td><span class="pill ${facturaTxt ? 'good':'warn'}">${facturaTxt ? facturaTxt : 'Sin factura'}</span></td>
+          <td class="num">${fmtMoney(Number(r.Monto||0))}</td>
+        `;
+        tb.appendChild(tr);
+      }
+    }
+
+    function renderAlertsList(rows, source){
+      setRightView('alertas');
+      const tb = $('tbA'); tb.innerHTML = '';
+      $('alertInfo').innerHTML = source==='E'
+        ? `<span class="pill bad">Egresos</span> <span style="color:var(--muted)">Partidas > 100% del presupuesto</span>`
+        : `<span class="pill bad">Ingresos</span> <span style="color:var(--muted)">Partidas < 100% del esperado</span>`;
+
+      const sorted = rows.slice().sort((a,b)=> source==='E' ? (b.Av-a.Av) : (a.Av-b.Av));
+      for(const r of sorted){
+        const tr = document.createElement('tr');
+        tr.style.cursor = 'pointer';
+        tr.innerHTML = `
+          <td><span class="pill">${source==='E'?'Egreso':'Ingreso'}</span></td>
+          <td>${r.Cat}</td>
+          <td>${r.Con || '(sin concepto)'}</td>
+          <td>${r.Mes}</td>
+          <td class="num">${isFinite(r.Av)?fmtPct(r.Av):'—'}</td>
+          <td><span class="${r.Sev.cls}">${r.Sev.label}</span></td>
+        `;
+        tr.addEventListener('click', ()=>{
+          setTipo(source);
+          SELECTED_KEY = r.key;
+          SELECTED_SOURCE = source;
+          setRightView('detalle');
+          render();
+          document.querySelectorAll('tbody tr.selected').forEach(x=>x.classList.remove('selected'));
+          const target = document.querySelector(`#tbMain tr[data-key="${CSS.escape(r.key)}"]`);
+          if(target) target.classList.add('selected');
+          closeDrawer();
+        });
+        tb.appendChild(tr);
+      }
+    }
+
+    function render(){
+      const s = aggregate();
+      const tipo = tipoVal();
+
+      $('kReal').textContent = fmtMoney(s.real);
+      $('kBudM').textContent = fmtMoney(s.budM);
+      $('kRows').textContent = s.rows.length + ' filas';
+      $('kAl').textContent = String(s.alerts);
+      // KPI Alertas: pintar en rojo si hay al menos una alerta
+      const kpiAlert = $('kpiAlertas');
+      if(s.alerts > 0){
+        kpiAlert.classList.add('hasAlerts');
+      }else{
+        kpiAlert.classList.remove('hasAlerts');
+      }
+
+      $('kAvY').textContent = isFinite(s.avY) ? fmtPct(s.avY) : '—';
+      $('kAvYS').textContent = s.year ? `Año ${s.year}: ${fmtMoney(s.realY)} / ${fmtMoney(s.budY)}` : '—';
+
+      const pct = isFinite(s.avY) ? Math.min(Math.max(s.avY,0), 2.0) : 0;
+      const p = $('pAnnual');
+      p.className = (tipo==='E') ? pbarClassOver(s.avY) : pbarClassUnder(s.avY);
+      p.querySelector('i').style.width = (pct*100).toFixed(1) + '%';
+
+      const tb = $('tbMain'); tb.innerHTML = '';
+
+      function barHTML(av){
+        const pct = isFinite(av) ? Math.min(Math.max(av,0), 2.0) : 0;
+        const sev = (tipo==='E') ? sevOver(av) : sevUnder(av);
+        const cls = (tipo==='E') ? pbarClassOver(av) : pbarClassUnder(av);
+        return `
+          <div class="small">${isFinite(av)?fmtPct(av):'—'} <span class="${sev.cls}">${sev.label}</span></div>
+          <div class="${cls}"><div class="marker" title="100%"></div><i style="width:${(pct*100).toFixed(1)}%"></i></div>
+        `;
+      }
+
+      for(const r of s.rows){
+        const tr = document.createElement('tr');
+        tr.dataset.key = r.key;
+        const isAlert = (tipo==='E') ? (r.BudAbs>0 && r.Av>1.0) : (r.BudAbs>0 && r.Av<1.0);
+        const alertPill = isAlert ? '<span class="pill bad">⚠️</span>' : '<span class="pill good">OK</span>';
+        tr.innerHTML = `
+          <td>${r.Cat}</td>
+          <td>${r.Con || '(sin concepto)'} </td>
+          <td>${r.Mes}</td>
+          <td>${r.Cta}</td>
+          <td class="num">${fmtMoney(r.RealAbs)}</td>
+          <td class="num">${fmtMoney(r.BudAbs)}</td>
+          <td>${barHTML(r.Av)}</td>
+          <td>${alertPill}</td>
+        `;
+        tr.addEventListener('click', ()=>{
+          document.querySelectorAll('tbody tr.selected').forEach(x=>x.classList.remove('selected'));
+          tr.classList.add('selected');
+          SELECTED_KEY = r.key;
+          SELECTED_SOURCE = tipo;
+          setRightView('detalle');
+          renderDetails(SELECTED_KEY);
+        });
+        tb.appendChild(tr);
+      }
+
+      if(SELECTED_KEY){
+        const exists = s.rows.some(r=>r.key===SELECTED_KEY);
+        if(exists) renderDetails(SELECTED_KEY);
+        else { SELECTED_KEY=null; renderDetails(null); }
+      } else {
+        renderDetails(null);
+      }
+
+      window.__rows = s.rows;
+      $('lastUpdate').textContent = 'Última actualización: ' + new Date().toLocaleString('es-MX');
+      refreshToggleButtons();
+      updateAllLabels();
+    }
+
+    // Drawer controls
+    function openDrawer(){
+      $('overlay').classList.add('show');
+      $('drawer').classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeDrawer(){
+      $('overlay').classList.remove('show');
+      $('drawer').classList.remove('show');
+      document.body.style.overflow = '';
+    }
+
+    async function onRefresh(){
+      const snap = {
+        Mes: new Set(FILTER_STATE.Mes),
+        CATEGORIA: new Set(FILTER_STATE.CATEGORIA),
+        CONCEPTO: new Set(FILTER_STATE.CONCEPTO),
+        "Cuenta bancaria": new Set(FILTER_STATE["Cuenta bancaria"]),
+        q: $('q').value,
+        tipo: tipoVal(),
+        open: { dMes: $('dMes').open, dCat: $('dCat').open, dCon: $('dCon').open, dCta: $('dCta').open }
+      };
+
+      const ok = await loadLive();
+      if(ok){
+        const allMes = getAllValuesForFilter('Mes');
+        const allCat = getAllValuesForFilter('CATEGORIA');
+        const allCon = getAllValuesForFilter('CONCEPTO');
+        const allCta = getAllValuesForFilter('Cuenta bancaria');
+
+        const restoreSet = (allVals, prevSet)=>{
+          if(!prevSet || prevSet.size===0) return new Set(allVals);
+          const inter = new Set(allVals.filter(v=>prevSet.has(v)));
+          return inter.size ? inter : new Set(allVals);
+        };
+        FILTER_STATE.Mes = restoreSet(allMes, snap.Mes);
+        FILTER_STATE.CATEGORIA = restoreSet(allCat, snap.CATEGORIA);
+        FILTER_STATE.CONCEPTO = restoreSet(allCon, snap.CONCEPTO);
+        FILTER_STATE["Cuenta bancaria"] = restoreSet(allCta, snap["Cuenta bancaria"]);
+
+        $('q').value = snap.q || '';
+        $('fTipo').value = snap.tipo || 'E';
+        $('dMes').open = !!snap.open.dMes;
+        $('dCat').open = !!snap.open.dCat;
+        $('dCon').open = !!snap.open.dCon;
+        $('dCta').open = !!snap.open.dCta;
+
+        initFilterPanels();
+      }
+      syncTipoUI();
+      render();
+    }
+
+    function hook(){
+      $('btnBurger').addEventListener('click', openDrawer);
+      $('btnCloseDrawer').addEventListener('click', closeDrawer);
+      $('overlay').addEventListener('click', closeDrawer);
+
+      $('btnRefreshTop').addEventListener('click', async ()=>{ await onRefresh(); });
+      $('btnRefresh').addEventListener('click', async ()=>{ await onRefresh(); closeDrawer(); });
+
+      $('q').addEventListener('input', ()=> render());
+
+      $('btnReset').addEventListener('click', ()=>{
+        setDefaultAll();
+        $('q').value='';
+        setTipo('E');
+        initFilterPanels();
+        closeDrawer();
+      });
+
+      // Tabs
+      $('tabE').addEventListener('click', ()=> setTipo('E'));
+      $('tabI').addEventListener('click', ()=> setTipo('I'));
+
+      // KPI Alertas acts as button to toggle alerts view
+      $('kpiAlertas').addEventListener('click', ()=>{
+        const tipo = tipoVal();
+        const rows = (window.__rows || []).filter(r=> tipo==='E' ? (r.BudAbs>0 && r.Av>1.0) : (r.BudAbs>0 && r.Av<1.0));
+        if(CURRENT_VIEW==='alertas'){
+          setRightView('detalle');
+          return;
+        }
+        renderAlertsList(rows, tipo);
+      });
+    }
+
+    (async function(){
+      await loadLive();
+      setDefaultAll();
+      initFilterPanels();
+      hook();
+      syncTipoUI();
+      setRightView('detalle');
+      render();
+    })();
+  </script>
+</body>
+</html>
