@@ -1,0 +1,735 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Check-inn Saltillo | Apartamentos en alquiler</title>
+  <meta name="description" content="Apartamentos ejecutivos en Saltillo. Corta y mediana estancia. Todo incluido." />
+  <style>
+    :root{
+      --bg:#0b0f14;
+      --card:#0f1622;
+      --card2:#0d131e;
+      --text:#e8eef6;
+      --muted:#a9b7c7;
+      --line:rgba(255,255,255,.10);
+      --accent:#a9ff3b;      /* verde-limón */
+      --accent2:#33b6ff;     /* azul */
+      --warn:#ffcc66;
+      --shadow: 0 18px 60px rgba(0,0,0,.45);
+      --radius: 18px;
+      --radius2: 26px;
+      --max: 1160px;
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:var(--font);
+      background:
+        radial-gradient(1200px 600px at 15% -10%, rgba(51,182,255,.18), transparent 55%),
+        radial-gradient(900px 500px at 85% 10%, rgba(169,255,59,.16), transparent 55%),
+        radial-gradient(900px 700px at 50% 120%, rgba(255,204,102,.10), transparent 50%),
+        var(--bg);
+      color:var(--text);
+    }
+    a{color:inherit;text-decoration:none}
+    .wrap{max-width:var(--max);margin:0 auto;padding:0 18px}
+    .topbar{
+      border-bottom:1px solid var(--line);
+      background:rgba(11,15,20,.55);
+      backdrop-filter: blur(10px);
+      position:sticky; top:0; z-index:50;
+    }
+    .topbar-inner{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:14px; padding:10px 0;
+    }
+    .phone{
+      display:flex; align-items:center; gap:10px; color:var(--muted);
+      font-size:14px;
+    }
+    .pill{
+      display:inline-flex; align-items:center; gap:8px;
+      border:1px solid var(--line);
+      padding:8px 12px; border-radius:999px;
+      background:rgba(255,255,255,.03);
+    }
+    .pill strong{color:var(--text); font-weight:700}
+    .nav{
+      display:flex; align-items:center; gap:10px;
+    }
+    .nav a{
+      color:var(--muted);
+      padding:8px 10px;
+      border-radius:12px;
+      transition:.15s ease;
+      font-size:14px;
+    }
+    .nav a:hover{color:var(--text); background:rgba(255,255,255,.05)}
+    .cta{
+      display:inline-flex; align-items:center; justify-content:center;
+      padding:10px 14px;
+      border-radius:14px;
+      background:linear-gradient(135deg, rgba(169,255,59,.95), rgba(51,182,255,.85));
+      color:#071018; font-weight:800;
+      box-shadow: 0 10px 30px rgba(51,182,255,.18);
+      border:0;
+      cursor:pointer;
+      white-space:nowrap;
+    }
+    .menuBtn{
+      display:none;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,.03);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:14px;
+      cursor:pointer;
+    }
+    .hero{
+      padding:44px 0 14px;
+    }
+    .hero-grid{
+      display:grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap:18px;
+      align-items:stretch;
+    }
+    .brand{
+      display:flex; align-items:center; gap:14px;
+      margin-bottom:14px;
+    }
+    .logo{
+      width:52px; height:52px; border-radius:14px;
+      background:#111;
+      overflow:hidden;
+      box-shadow: var(--shadow);
+      border:1px solid rgba(255,255,255,.08);
+      flex:0 0 auto;
+    }
+    .logo img{width:100%;height:100%;object-fit:cover}
+    .brand h1{
+      margin:0;
+      font-size:28px;
+      letter-spacing:.2px;
+      line-height:1.05;
+    }
+    .brand p{margin:2px 0 0; color:var(--muted); font-size:14px}
+    .hero-card{
+      border:1px solid var(--line);
+      border-radius:var(--radius2);
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      position:relative;
+    }
+    .hero-card .content{padding:18px 18px 16px}
+    .kicker{
+      display:inline-flex; align-items:center; gap:8px;
+      font-size:13px; color:var(--muted);
+      margin-bottom:10px;
+    }
+    .dot{
+      width:8px;height:8px;border-radius:99px;
+      background:linear-gradient(135deg, var(--accent), var(--accent2));
+      box-shadow:0 0 0 6px rgba(169,255,59,.10);
+    }
+    .hero-title{
+      margin:0 0 10px;
+      font-size:34px;
+      line-height:1.08;
+      letter-spacing:-.2px;
+    }
+    .hero-sub{
+      margin:0 0 16px;
+      color:var(--muted);
+      font-size:15px;
+      line-height:1.5;
+      max-width:52ch;
+    }
+    .search{
+      display:grid;
+      grid-template-columns: 1fr 1fr .8fr auto;
+      gap:10px;
+      margin-top:14px;
+    }
+    .field{
+      display:flex; flex-direction:column; gap:6px;
+      padding:10px 12px;
+      border-radius:16px;
+      border:1px solid var(--line);
+      background:rgba(10,14,20,.55);
+    }
+    .field label{font-size:12px;color:var(--muted)}
+    .field input, .field select{
+      background:transparent; border:0; outline:0;
+      color:var(--text);
+      font-size:14px;
+      padding:0;
+    }
+    .field input[type="date"]{color-scheme: dark;}
+    .search .cta{height:100%; min-width:110px}
+    .hero-media{
+      border:1px solid var(--line);
+      border-radius:var(--radius2);
+      overflow:hidden;
+      background:rgba(255,255,255,.02);
+      box-shadow: var(--shadow);
+      position:relative;
+      min-height:320px;
+    }
+    .hero-media img{
+      width:100%; height:100%;
+      object-fit:cover;
+      display:block;
+      filter:saturate(1.06) contrast(1.02);
+      transform: scale(1.02);
+    }
+    .badgeRow{
+      display:flex; flex-wrap:wrap; gap:10px;
+      padding:12px 18px 18px;
+      border-top:1px solid var(--line);
+      background:rgba(0,0,0,.10);
+    }
+    .badge{
+      display:inline-flex; align-items:center; gap:10px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.03);
+      padding:10px 12px;
+      border-radius:16px;
+      color:var(--muted);
+      font-size:13px;
+    }
+    .badge img{height:22px; width:auto; opacity:.95}
+    section{padding:30px 0}
+    .sectionTitle{
+      display:flex; align-items:flex-end; justify-content:space-between; gap:14px;
+      margin-bottom:14px;
+    }
+    h2{
+      margin:0;
+      font-size:22px;
+      letter-spacing:-.2px;
+    }
+    .subtle{
+      margin:4px 0 0;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.5;
+      max-width:70ch;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap:14px;
+    }
+    .card{
+      border:1px solid var(--line);
+      border-radius:var(--radius);
+      background:rgba(255,255,255,.03);
+      overflow:hidden;
+      box-shadow: 0 12px 40px rgba(0,0,0,.30);
+    }
+    .card .p{padding:14px}
+    .card h3{margin:0 0 6px; font-size:16px}
+    .card p{margin:0; color:var(--muted); font-size:13px; line-height:1.5}
+    .card img{width:100%; height:180px; object-fit:cover; display:block}
+    .span6{grid-column: span 6}
+    .span4{grid-column: span 4}
+    .span8{grid-column: span 8}
+    .span12{grid-column: span 12}
+    .list{
+      margin:10px 0 0;
+      padding:0;
+      list-style:none;
+      display:grid;
+      gap:10px;
+    }
+    .li{
+      display:flex; gap:10px; align-items:flex-start;
+      padding:10px 12px;
+      border:1px solid rgba(255,255,255,.09);
+      border-radius:16px;
+      background:rgba(0,0,0,.10);
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.45;
+    }
+    .check{
+      width:18px; height:18px; border-radius:6px;
+      background:linear-gradient(135deg, rgba(169,255,59,.95), rgba(51,182,255,.85));
+      flex:0 0 auto;
+      margin-top:2px;
+    }
+    .focus{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:14px;
+    }
+    .focus .card{display:flex; flex-direction:column}
+    .callout{
+      padding:14px;
+      border-radius:16px;
+      border:1px dashed rgba(169,255,59,.35);
+      background:rgba(169,255,59,.06);
+      color:var(--text);
+      margin-top:12px;
+      font-size:14px;
+      line-height:1.45;
+    }
+    .footer{
+      border-top:1px solid var(--line);
+      padding:22px 0 30px;
+      color:var(--muted);
+      font-size:14px;
+    }
+    .footerGrid{
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap:14px;
+      align-items:start;
+    }
+    .footer strong{color:var(--text)}
+    .fine{opacity:.9; font-size:13px}
+    .toast{
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,.75);
+      border: 1px solid rgba(255,255,255,.14);
+      padding: 10px 12px;
+      border-radius: 14px;
+      color: var(--text);
+      box-shadow: var(--shadow);
+      display:none;
+      z-index: 100;
+      font-size: 13px;
+      max-width:min(560px, calc(100vw - 24px));
+    }
+    .toast b{color:var(--accent)}
+    @media (max-width: 980px){
+      .hero-grid{grid-template-columns:1fr}
+      .hero-media{min-height:260px}
+      .focus{grid-template-columns:1fr}
+      .search{grid-template-columns:1fr 1fr; }
+      .search .cta{grid-column: span 2}
+      .span6{grid-column: span 12}
+      .span4{grid-column: span 12}
+      .span8{grid-column: span 12}
+      .footerGrid{grid-template-columns:1fr}
+      .nav{display:none}
+      .menuBtn{display:inline-flex}
+    }
+  </style>
+</head>
+
+<body>
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <div class="wrap">
+      <div class="topbar-inner">
+        <div class="phone">
+          <span class="pill">📞 <strong>+52 (844) 444-3922</strong></span>
+          <span class="pill" style="display:none" id="nightsPill">🗓️ <strong id="nightsText">—</strong></span>
+        </div>
+
+        <nav class="nav" id="nav">
+          <a href="#inicio">Inicio</a>
+          <a href="#propiedades">Propiedades</a>
+          <a href="#checkin">Check-in (Registro)</a>
+          <a href="#reglamento">Reglamento & Indicaciones</a>
+          <a href="#contacto">Contáctenos</a>
+        </nav>
+
+        <div style="display:flex; gap:10px; align-items:center;">
+          <button class="menuBtn" id="menuBtn" aria-label="Abrir menú">☰</button>
+          <a class="cta" href="#propiedades">Ver todos los alojamientos</a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <main id="inicio" class="hero">
+    <div class="wrap">
+      <div class="hero-grid">
+        <div class="hero-card">
+          <div class="content">
+            <div class="brand">
+              <div class="logo">
+                <!-- Logo público que aparece en el sitio -->
+                <img src="https://l.icdbcdn.com/oh/53bd90e8-808e-472d-8762-fcc4ccb4e004.png?w=200" alt="Check-inn Saltillo" />
+              </div>
+              <div>
+                <h1>Check-inn Saltillo</h1>
+                <p>Apartamentos en alquiler en Saltillo, México</p>
+              </div>
+            </div>
+
+            <div class="kicker"><span class="dot"></span> Alojamientos ejecutivos • Corta y mediana estancia • Todo incluido</div>
+            <h2 class="hero-title">Tu estancia práctica, cómoda y bien ubicada.</h2>
+            <p class="hero-sub">
+              Alojamientos en zonas céntricas y comerciales, con acceso rápido a vialidades principales y puntos clave de la ciudad.
+            </p>
+
+            <!-- BUSCADOR (front) -->
+            <form class="search" id="searchForm">
+              <div class="field">
+                <label for="llegada">Llegada</label>
+                <input id="llegada" name="llegada" type="date" required />
+              </div>
+              <div class="field">
+                <label for="salida">Salida</label>
+                <input id="salida" name="salida" type="date" required />
+              </div>
+              <div class="field">
+                <label for="personas">Personas</label>
+                <select id="personas" name="personas">
+                  <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option>
+                </select>
+              </div>
+              <button class="cta" type="submit">Buscar</button>
+            </form>
+          </div>
+
+          <div class="badgeRow">
+            <div class="badge">
+              <img src="https://l.icdbcdn.com/oh/69e4bfc1-12fd-45a9-ab96-a93221fe5f32.png?f=32" alt="Airbnb Superhost" />
+              Superhost
+            </div>
+            <div class="badge">
+              <img src="https://l.icdbcdn.com/oh/0fe7db22-3dc3-4aa3-92a6-f1e3dd09aafc.png?f=32" alt="Guest favorite" />
+              Guest favorite
+            </div>
+          </div>
+        </div>
+
+        <aside class="hero-media card">
+          <!-- Imagen pública que aparece en el sitio -->
+          <img src="https://l.icdbcdn.com/oh/a6a07936-8501-4095-a477-0181c0f01ad8.png?w=2080" alt="Alojamientos ejecutivos" />
+        </aside>
+      </div>
+    </div>
+  </main>
+
+  <!-- DESTACADAS / UBICACIÓN -->
+  <section>
+    <div class="wrap">
+      <div class="sectionTitle">
+        <div>
+          <p style="margin:0; color:var(--muted); font-size:13px;">Propiedades destacadas</p>
+          <h2>UBICADOS EN LAS ZONAS MÁS IMPORTANTES DE SALTILLO</h2>
+          <p class="subtle">
+            Nuestros alojamientos están ubicados en las zonas más céntricas y comerciales de la ciudad, rodeados de restaurantes,
+            supermercados, bancos, centros comerciales y universidades. :contentReference[oaicite:2]{index=2}
+          </p>
+          <p class="subtle">
+            Acceso a vialidades como periférico Luis Echeverría, Av. Venustiano Carranza, Blvd. Valdés Sánchez,
+            Blvd. Nazario Ortiz, Mariano Abasolo, entre otras. :contentReference[oaicite:3]{index=3}
+          </p>
+        </div>
+        <a class="cta" href="#propiedades">Explorar</a>
+      </div>
+
+      <div class="grid">
+        <article class="card span6">
+          <img src="https://l.icdbcdn.com/oh/58cba4a4-6c1e-49a2-99b1-8789229e296a.jpg?w=1040" alt="Interior" />
+          <div class="p">
+            <h3>Interiores equipados</h3>
+            <p>Espacios listos para trabajar y descansar, con estética moderna y funcional.</p>
+          </div>
+        </article>
+
+        <article class="card span6">
+          <img src="https://l.icdbcdn.com/oh/51d86e63-10ac-4b9f-9863-0ce50bdf0907.png?w=1040" alt="Mapa de ubicación" />
+          <div class="p">
+            <h3>Conectividad urbana</h3>
+            <p>Movilidad rápida hacia zonas clave, centros comerciales y salidas carreteras.</p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- TODO INCLUIDO + ENFOQUE -->
+  <section id="reglamento">
+    <div class="wrap">
+      <div class="grid">
+        <div class="card span6">
+          <div class="p">
+            <h2>ALOJAMIENTOS "TODO INCLUIDO"</h2>
+            <p class="subtle">Todos nuestros alojamientos cuentan con: :contentReference[oaicite:4]{index=4}</p>
+            <ul class="list">
+              <li class="li"><span class="check"></span> Servicios básicos: Agua, Gas, Luz. :contentReference[oaicite:5]{index=5}</li>
+              <li class="li"><span class="check"></span> Conectividad a Internet. :contentReference[oaicite:6]{index=6}</li>
+              <li class="li"><span class="check"></span> Blancos (sábanas, toallas, colchas). :contentReference[oaicite:7]{index=7}</li>
+              <li class="li"><span class="check"></span> Utensilios básicos de cocina. :contentReference[oaicite:8]{index=8}</li>
+              <li class="li"><span class="check"></span> Electrodomésticos (microondas, refrigerador, plancha). :contentReference[oaicite:9]{index=9}</li>
+              <li class="li"><span class="check"></span> Seguridad de circuito cerrado 24/7. :contentReference[oaicite:10]{index=10}</li>
+              <li class="li"><span class="check"></span> Clima frío-calor. :contentReference[oaicite:11]{index=11}</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="card span6">
+          <div class="p">
+            <h2>NUESTRO ENFOQUE: EMPRESAS & PROFESIONISTAS</h2>
+            <p class="subtle">
+              Ofrecemos atractivos descuentos a empresas que buscan alternativa a tarifas hoteleras. :contentReference[oaicite:12]{index=12}
+            </p>
+            <div class="callout">
+              ✅ <b>¡EMITIMOS FACTURA!</b> :contentReference[oaicite:13]{index=13}<br/>
+              Si quieres, aquí podemos añadir un formulario “Cotización para empresa” (nombre, RFC, fechas, número de huéspedes).
+            </div>
+
+            <div style="margin-top:14px" class="focus">
+              <div class="card" style="background:rgba(255,255,255,.02)">
+                <div class="p">
+                  <h3>Estancias flexibles</h3>
+                  <p>Corta y mediana estancia con procesos simples y claros.</p>
+                </div>
+              </div>
+              <div class="card" style="background:rgba(255,255,255,.02)">
+                <div class="p">
+                  <h3>Operación profesional</h3>
+                  <p>Check-in eficiente, soporte y comunicación directa.</p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROPIEDADES -->
+  <section id="propiedades">
+    <div class="wrap">
+      <div class="sectionTitle">
+        <div>
+          <p style="margin:0; color:var(--muted); font-size:13px;">Nuestras propiedades</p>
+          <h2>Explora alojamientos</h2>
+          <p class="subtle">Grid tipo “tarjetas” para mostrar tus principales ubicaciones (puedes duplicar tarjetas según necesites).</p>
+        </div>
+        <a class="cta" href="#contacto">Quiero reservar</a>
+      </div>
+
+      <div class="grid">
+        <article class="card span6">
+          <img src="https://l.icdbcdn.com/oh/f892a18a-3609-42cf-9a79-b6328aa78fa6.jpg?w=2080" alt="Propiedad 1" />
+          <div class="p">
+            <h3>Propiedad 1</h3>
+            <p>Zona céntrica • Estacionamiento • Internet • Todo incluido</p>
+          </div>
+        </article>
+
+        <article class="card span6">
+          <img src="https://l.icdbcdn.com/oh/3c06470b-3920-4b6d-a46c-35b82042bd20.jpg?w=2080" alt="Propiedad 2" />
+          <div class="p">
+            <h3>Propiedad 2</h3>
+            <p>Acceso rápido a vialidades • Seguridad • Clima • Cocina equipada</p>
+          </div>
+        </article>
+
+        <article class="card span6">
+          <img src="https://l.icdbcdn.com/oh/914cc6bc-f2b1-4ef7-819a-ea43d475eeb8.png?w=2080" alt="Propiedad 3" />
+          <div class="p">
+            <h3>Propiedad 3</h3>
+            <p>Ideal para estancias laborales • Facturación • Excelente ubicación</p>
+          </div>
+        </article>
+
+        <article class="card span6">
+          <img src="https://l.icdbcdn.com/oh/c8f2fa63-7b02-4911-a9a9-88a849b8f27e.png?w=2080" alt="Propiedad 4" />
+          <div class="p">
+            <h3>Propiedad 4</h3>
+            <p>Espacio amplio • Seguridad • Internet • Servicios incluidos</p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- CHECK-IN (sección placeholder) -->
+  <section id="checkin">
+    <div class="wrap">
+      <div class="grid">
+        <div class="card span12">
+          <div class="p">
+            <h2>Check-in (Registro)</h2>
+            <p class="subtle">
+              Aquí puedes colocar el link a tu formulario real de check-in (Google Forms / Typeform / tu app Shiny) o incrustarlo con iframe.
+              En el sitio original hay una sección de navegación “Check-in (Registro)”. :contentReference[oaicite:14]{index=14}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACTO / FOOTER -->
+  <footer id="contacto" class="footer">
+    <div class="wrap">
+      <div class="footerGrid">
+        <div>
+          <div class="brand" style="margin:0 0 10px">
+            <div class="logo" style="width:44px;height:44px">
+              <img src="https://l.icdbcdn.com/oh/53bd90e8-808e-472d-8762-fcc4ccb4e004.png?w=200" alt="Check-inn Saltillo" />
+            </div>
+            <div>
+              <h2 style="margin:0">Check-inn Saltillo</h2>
+              <div class="fine">Alojamientos ejecutivos • Saltillo, Coahuila</div>
+            </div>
+          </div>
+
+          <div class="pill" style="display:inline-flex; margin:6px 0">📞 <strong>+52 (844) 444-3922</strong></div>
+          <p class="subtle" style="margin-top:10px">
+            José Cárdenas Valdez #894, Col. República Ote., Saltillo, Coahuila, México 25280. :contentReference[oaicite:15]{index=15}<br/>
+            Email: <a href="mailto:check.inn.saltillo@hotmail.com"><strong>check.inn.saltillo@hotmail.com</strong></a> :contentReference[oaicite:16]{index=16}
+          </p>
+        </div>
+
+        <div>
+          <div class="card" style="background:rgba(255,255,255,.02)">
+            <div class="p">
+              <h3 style="margin-top:0">Acciones rápidas</h3>
+              <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <a class="cta" href="#propiedades">Ver propiedades</a>
+                <a class="pill" href="https://check-inn-saltillo.com/" target="_blank" rel="noopener">Abrir sitio actual</a>
+              </div>
+              <p class="fine" style="margin-top:12px">
+                ©2025 www.check-inn-saltillo.com — Referencia de estructura y contenido. :contentReference[oaicite:17]{index=17}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // Menú móvil
+    const menuBtn = document.getElementById('menuBtn');
+    const nav = document.getElementById('nav');
+    menuBtn?.addEventListener('click', () => {
+      const isOpen = nav.style.display === 'flex';
+      nav.style.display = isOpen ? 'none' : 'flex';
+      nav.style.flexWrap = 'wrap';
+      nav.style.justifyContent = 'flex-end';
+      nav.style.gap = '6px';
+    });
+
+    // Fechas por defecto (hoy + mañana)
+    const llegada = document.getElementById('llegada');
+    const salida = document.getElementById('salida');
+    const nightsPill = document.getElementById('nightsPill');
+    const nightsText = document.getElementById('nightsText');
+
+    function toISO(d){
+      const x = new Date(d);
+      const off = x.getTimezoneOffset();
+      const local = new Date(x.getTime() - off*60000);
+      return local.toISOString().slice(0,10);
+    }
+    const today = new Date();
+    const tomorrow = new Date(Date.now() + 86400000);
+    llegada.value = toISO(today);
+    salida.value = toISO(tomorrow);
+
+    function nights(){
+      const a = new Date(llegada.value);
+      const b = new Date(salida.value);
+      const diff = Math.round((b - a) / 86400000);
+      if (!isFinite(diff) || diff <= 0) return null;
+      return diff;
+    }
+
+    function showToast(msg){
+      const t = document.getElementById('toast');
+      t.innerHTML = msg;
+      t.style.display = 'block';
+      clearTimeout(window.__toastTimer);
+      window.__toastTimer = setTimeout(()=> t.style.display = 'none', 3500);
+    }
+
+    function refreshNights(){
+      const n = nights();
+      if(n){
+        nightsText.textContent = `${n} noche${n>1?'s':''}`;
+        nightsPill.style.display = 'inline-flex';
+      }else{
+        nightsPill.style.display = 'none';
+      }
+    }
+    llegada.addEventListener('change', refreshNights);
+    salida.addEventListener('change', refreshNights);
+    refreshNights();
+
+    // Backend (Cloud Run)
+    const API_BASE = "https://checkinndashboard-1044570371371.northamerica-south1.run.app";
+
+    document.getElementById('searchForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const people = document.getElementById('personas').value;
+  const n = nights();
+  if(!n){
+    showToast('⚠️ Revisa fechas: la <b>Salida</b> debe ser posterior a la <b>Llegada</b>.');
+    return;
+  }
+
+  // UI feedback
+  showToast('⏳ Consultando disponibilidad...');
+  location.href = `#propiedades`;
+
+  // Construye querystring
+  const qs = new URLSearchParams({
+    llegada: llegada.value,
+    salida: salida.value,
+    personas: people
+  }).toString();
+
+  try{
+    // Endpoint sugerido: /api/search (ajústalo a tu API real)
+    const url = `${API_BASE}/api/search?${qs}`;
+
+    const res = await fetch(url, {
+      method: "GET",
+      headers: { "Accept": "application/json" }
+    });
+
+    if(!res.ok){
+      const txt = await res.text().catch(()=> "");
+      throw new Error(`API error ${res.status}: ${txt || res.statusText}`);
+    }
+
+    const data = await res.json();
+
+    // Interpreta resultados de forma flexible
+    const total =
+      (Array.isArray(data?.results) ? data.results.length : null) ??
+      (Array.isArray(data?.data) ? data.data.length : null) ??
+      data?.total ??
+      data?.count ??
+      "—";
+
+    showToast(`✅ Listo: <b>${n} noche(s)</b> • ${people} persona(s) • Resultados: <b>${total}</b>`);
+
+    // (Opcional) Si tu API devuelve una lista de propiedades, aquí puedes renderizarlas.
+    // Por ahora solo dejamos el toast y el scroll a #propiedades.
+    // console.log("API data:", data);
+
+  }catch(err){
+    console.error(err);
+    showToast(`❌ No pude consultar la API. <span style="opacity:.9">${String(err.message || err)}</span>`);
+  }
+});
+  </script>
+</body>
+</html>
