@@ -1,0 +1,6 @@
+{
+  "financeDataEndpoint": "https://script.google.com/macros/s/AKfycbwmlnws66Fz008rDTX9nWmvUEd6akvfT7e_ejgT85MGDAzx3c8iWNjHj05nS2W0qB8_cw/exec",
+  "reservationsApiBase": "https://checkinndashboard-1044570371371.northamerica-south1.run.app",
+  "reservationsEndpoint": "/api/reservations",
+  "timeoutMs": 15000
+}
