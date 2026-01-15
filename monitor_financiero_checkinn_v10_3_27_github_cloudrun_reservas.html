@@ -1,0 +1,772 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1, viewport-fit=cover" />
+  <title>Check Inn - Monitor Financiero</title>
+  <style>
+    :root{
+      --bg:#070b14;
+      --panel:rgba(255,255,255,.06);
+      --line:rgba(255,255,255,.14);
+      --text:rgba(255,255,255,.92);
+      --muted:rgba(255,255,255,.65);
+      --good:#3ddc97; --warn:#ffcc66; --bad:#ff6b6b;
+      --accent:#6ae4ff; --accent2:#7c5cff;
+      --shadow: 0 18px 55px rgba(0,0,0,.38);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; color:var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(1100px 750px at 10% 0%, rgba(106,228,255,.18), transparent 55%),
+                  radial-gradient(1000px 700px at 90% 10%, rgba(124,92,255,.18), transparent 55%),
+                  linear-gradient(180deg, var(--bg), #050814 70%);
+      min-height:100vh;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      overflow-x:hidden;
+    }
+
+    /* App bar */
+    .appbar{
+      position:sticky; top:0; z-index: 80;
+      padding: 10px 12px calc(10px + env(safe-area-inset-top));
+      display:flex; align-items:center; gap:10px;
+      background: rgba(7,11,20,.72);
+      backdrop-filter: blur(12px);
+      border-bottom:1px solid rgba(255,255,255,.10);
+    }
+    .appbar .t{
+      font-size:18px; font-weight:850; letter-spacing:.2px; line-height:1.1;
+      background: linear-gradient(135deg, rgba(255,255,255,.96), rgba(255,255,255,.70));
+      -webkit-background-clip:text; background-clip:text; color:transparent;
+      flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .titleFilters{
+      font-size:12px;
+      font-weight:700;
+      letter-spacing:.2px;
+      opacity:.85;
+      margin-left:8px;
+      white-space:nowrap;
+    }
+
+
+    /* Buttons */
+    button, .btnLike{
+      padding:10px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.08); color:var(--text); cursor:pointer;
+      transition: transform .12s ease, filter .12s ease, background .12s ease;
+      font-weight:800;
+      user-select:none;
+    }
+    button.primary{
+      border-color: rgba(106,228,255,.35);
+      background: linear-gradient(135deg, rgba(106,228,255,.20), rgba(124,92,255,.20));
+    }
+    button:hover, .btnLike:hover{filter:brightness(1.10); transform: translateY(-1px);}
+
+    /* CSS-only drawer toggle */
+    #navToggle{ position:absolute; left:-9999px; }
+    .burgerLabel{
+      width:42px;height:42px;border-radius:14px;
+      border:1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.07);
+      display:grid; place-items:center;
+      cursor:pointer;
+      transition: transform .12s ease, filter .12s ease;
+      flex:0 0 auto;
+    }
+    .burgerLabel:hover{filter:brightness(1.1); transform: translateY(-1px);}
+    .burgerLabel span{
+      width:18px;height:2px;background: rgba(255,255,255,.85);
+      display:block; border-radius:2px; position:relative;
+    }
+    .burgerLabel span:before,.burgerLabel span:after{
+      content:""; position:absolute; left:0; right:0; height:2px; border-radius:2px;
+      background: rgba(255,255,255,.85);
+    }
+    .burgerLabel span:before{top:-6px}
+    .burgerLabel span:after{top:6px}
+
+    .overlay{
+      display:none;
+      position:fixed; inset:0;
+      background: rgba(0,0,0,.50);
+      z-index: 90;
+    }
+    .drawer{
+      position:fixed; top:0; left:0;
+      width: min(420px, 92vw);
+      height:100vh;
+      background: rgba(12,18,34,.96);
+      border-right:1px solid rgba(255,255,255,.14);
+      box-shadow: 0 18px 55px rgba(0,0,0,.55);
+      backdrop-filter: blur(12px);
+      padding:14px;
+      transform: translateX(-105%);
+      transition: transform .18s ease;
+      z-index: 100;
+      overflow:auto;
+      border-radius: 0 18px 18px 0;
+    }
+    /* When checked, show overlay + drawer */
+    #navToggle:checked ~ .overlay{ display:block; }
+    #navToggle:checked ~ .drawer{ transform: translateX(0); }
+    /* Prevent background scroll when drawer open (best-effort) */
+    #navToggle:checked ~ .wrap { filter: blur(0px); }
+
+    .closeRow{display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px;}
+    .closeRow .h{font-weight:900; font-size:14px;}
+    .closeX{
+      width:42px;height:42px;border-radius:14px;
+      display:grid;place-items:center;
+      border:1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.08);
+      cursor:pointer;
+    }
+
+    /* Content */
+    .wrap{padding:12px; padding-bottom: calc(14px + env(safe-area-inset-bottom));}
+    .card{
+      background:rgba(255,255,255,.06);
+      border:1px solid var(--line);
+      border-radius:16px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+    .main{padding:14px;}
+
+    .titleBig{
+      margin:0 0 4px 0;
+      font-size:22px; font-weight:900; letter-spacing: .2px; line-height:1.1;
+      background: linear-gradient(135deg, rgba(255,255,255,.96), rgba(255,255,255,.70));
+      -webkit-background-clip:text; background-clip:text; color:transparent;
+    }
+    .subtitle{color:var(--muted); font-size:12px; margin-bottom:10px;}
+    .small{font-size:12px; color:var(--muted)}
+    .hr{height:1px; background: rgba(255,255,255,.10); margin:14px 0;}
+
+    /* KPIs */
+    .kpis{display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;}
+    .kpi{padding:12px; background: rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.12); border-radius:16px; min-width:0;}
+    .kpi .t{color:var(--muted); font-size:11px;}
+    .kpi .v{font-size:16px; font-weight:800; margin-top:6px;}
+    .kpi .s{color:var(--muted); font-size:11px; margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+    .kpiWide{grid-column: 1 / -1;}
+    .kpiBtn{
+      cursor:pointer;
+      transition: transform .12s ease, filter .12s ease, background .12s ease;
+    }
+    .kpiBtn:hover{filter:brightness(1.10); transform: translateY(-1px);}
+    .kpiBtn.active{
+      border-color: rgba(255,107,107,.55);
+      background: linear-gradient(135deg, rgba(255,107,107,.25), rgba(180,40,40,.35));
+      box-shadow: 0 0 0 4px rgba(255,107,107,.20);
+    }
+
+    .pwrap{margin-top:8px}
+    .pbar{
+      height:10px; border-radius:999px;
+      background: rgba(255,255,255,.10);
+      overflow:hidden; border:1px solid rgba(255,255,255,.14);
+      position:relative;
+    }
+    .pbar .marker{
+      position:absolute; left:50%; top:-2px; bottom:-2px;
+      width:2px; background: rgba(255,255,255,.45);
+      border-radius:2px;
+      transform: translateX(-1px);
+    }
+    .pbar i{display:block; height:100%; width:0%;}
+    .pbar.good i{background: rgba(61,220,151,.75);}
+    .pbar.warn i{background: rgba(255,204,102,.75);}
+    .pbar.bad  i{background: rgba(255,107,107,.75);}
+    /* Override: colores fijos de barras en KPIs (solicitud) */
+    /* Egresos (selección) y Avance ANUAL egresos -> rojo */
+    #pME i{background: rgba(255,107,107,.85) !important;}
+    #pYE i{background: rgba(255,107,107,.85) !important;}
+    /* Ingresos (selección) y Cumplimiento ANUAL ingresos -> verde */
+    #pMI i{background: rgba(61,220,151,.85) !important;}
+    #pYI i{background: rgba(61,220,151,.85) !important;}
+
+
+    .pill{
+      display:inline-block; padding:4px 8px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.06);
+      font-size:12px;
+      white-space:nowrap;
+    }
+    .pill.good{border-color: rgba(61,220,151,.35); background: rgba(61,220,151,.14);}
+    .pill.warn{border-color: rgba(255,204,102,.35); background: rgba(255,204,102,.14);}
+    .pill.bad {border-color: rgba(255,107,107,.35); background: rgba(255,107,107,.14);}
+
+    /* Tabs */
+    .topbar{
+      display:flex; gap:8px; padding:10px;
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:14px;
+      background: rgba(255,255,255,.05);
+      margin-top:12px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .topbar .spacer{flex:1}
+    .tabs{
+      display:flex; gap:8px; padding:4px;
+      border-radius:14px;
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.12);
+    }
+    .tab{
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      cursor:pointer;
+      font-weight:900; font-size:12px;
+      user-select:none;
+      transition: transform .12s ease, filter .12s ease, background .12s ease;
+    }
+    .tab:hover{filter:brightness(1.10); transform: translateY(-1px);}
+    .tab.active{
+      border-color: rgba(106,228,255,.35);
+      background: linear-gradient(135deg, rgba(106,228,255,.18), rgba(124,92,255,.18));
+      box-shadow: 0 0 0 4px rgba(106,228,255,.06);
+    }
+
+    /* Tables */
+    table{width:100%; border-collapse:separate; border-spacing:0; overflow:hidden; border-radius:14px;}
+    thead th{
+      text-align:left; font-size:11px; color:var(--muted);
+      background: rgba(255,255,255,.06); border-bottom:1px solid rgba(255,255,255,.10);
+      padding:10px;
+      position:sticky; top:0; z-index:2;
+    }
+    tbody td{
+      padding:10px; border-bottom:1px solid rgba(255,255,255,.08);
+      font-size:12px;
+      background: rgba(10,16,32,.35);
+      vertical-align:top;
+    }
+    tbody tr:hover td{background: rgba(255,255,255,.06);}
+    tbody tr.selected td{outline: 2px solid rgba(106,228,255,.35); background: rgba(106,228,255,.08);}
+    .num{text-align:right; font-variant-numeric: tabular-nums;}
+
+    .grid{display:grid; grid-template-columns: 1fr; gap:12px; margin-top:12px;}
+    .panel{padding:12px; background: rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.12); border-radius:16px;}
+
+    .scroll{
+      overflow:auto;
+      border-radius:14px;
+      min-height: 260px;
+      max-height: 56vh;
+      resize: vertical;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Filter UI inside drawer */
+    .brand{
+      display:flex; gap:12px; align-items:center; padding:10px 10px 12px;
+      border-bottom:1px solid rgba(255,255,255,.10);
+      margin:-6px -6px 10px;
+    }
+    .logo{
+      width:34px;height:34px;border-radius:12px;
+      background: linear-gradient(135deg, rgba(106,228,255,.65), rgba(124,92,255,.65));
+      box-shadow: 0 0 0 8px rgba(106,228,255,.10), 0 0 22px rgba(124,92,255,.25);
+    }
+    .brand h1{margin:0; font-size:16px; letter-spacing:.2px;}
+    .brand .sub{color:var(--muted); font-size:12px; margin-top:2px;}
+
+    label{display:block; font-size:12px; color:var(--muted); margin:10px 0 6px;}
+    .searchInput{
+      width:100%;
+      padding:11px 12px; border-radius:12px; border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06); color: var(--text);
+      outline:none;
+    }
+    details.fblock{
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.04);
+      border-radius:14px;
+      padding:10px 10px;
+      margin-top:10px;
+    }
+    details.fblock > summary{
+      cursor:pointer;
+      list-style:none;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      font-weight:900;
+      font-size:12px;
+      color: rgba(255,255,255,.82);
+    }
+    details.fblock > summary::-webkit-details-marker{display:none;}
+    .chev{opacity:.8}
+    .comboPanel{
+      margin-top:10px;
+      background: rgba(12,18,34,.55);
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:14px;
+      padding:10px;
+      max-height: 260px;
+      overflow:auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .comboTop{
+      display:flex; gap:8px; align-items:center; margin-bottom:8px;
+      position:sticky; top:0;
+      background: rgba(12,18,34,.85);
+      padding:4px 0 8px;
+      border-bottom: 1px solid rgba(255,255,255,.10);
+      z-index: 2;
+    }
+    .comboTop input{
+      flex:1;
+      padding:9px 10px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      outline:none;
+      min-width:0;
+    }
+    .toggleAll{
+      padding:8px 10px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.08);
+      font-size:12px;
+      white-space:nowrap;
+      cursor:pointer;
+      user-select:none;
+      flex:0 0 auto;
+    }
+    .toggleAll.on{
+      border-color: rgba(106,228,255,.40);
+      background: linear-gradient(135deg, rgba(106,228,255,.18), rgba(124,92,255,.18));
+      box-shadow: 0 0 0 4px rgba(106,228,255,.08);
+      font-weight:900;
+    }
+    .opt{
+      display:flex; gap:10px; align-items:center;
+      padding:8px 8px;
+      border-radius:10px;
+      cursor:pointer;
+      user-select:none;
+    }
+    .opt:hover{background: rgba(255,255,255,.06);}
+    .opt input{width:16px; height:16px;}
+    .opt span{font-size:13px;}
+    .status{margin-top:10px; font-size:12px; color:var(--muted);}
+    .dot{display:inline-block; width:8px; height:8px; border-radius:999px; background:var(--accent); margin-right:6px;}
+    .btns{display:flex; gap:8px; margin-top:12px; flex-wrap:wrap}
+    .hide{display:none !important;}
+
+    @media (min-width: 1024px){
+      .wrap{padding:16px;}
+      .titleBig{font-size:28px;}
+      .subtitle{font-size:13px;}
+      .kpis{grid-template-columns: 1fr 1fr 1fr 1fr;}
+      .grid{grid-template-columns: 2fr 1fr;}
+      .appbar .t{font-size:20px;}
+    }
+  
+    /* --- Indicadores financieros (módulo adicional, seguro) --- */
+    .finModule{margin-top:12px;}
+    .finHeader{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+    .finHeader .h{font-weight:950;font-size:14px;}
+    .finHeader .sub{color:var(--muted);font-size:12px;}
+    .finKpis{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    .finKpi{padding:12px;border-radius:16px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);}
+    .finKpi .t{color:var(--muted);font-size:11px;}
+    .finKpi .v{font-size:16px;font-weight:900;margin-top:6px;}
+    .finKpi .s{color:var(--muted);font-size:11px;margin-top:4px;}
+
+    .finAlerts{margin-top:10px;border-radius:16px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);padding:10px;}
+    .finAlertsTop{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+    .finAlertsTop .ttl{font-weight:950;font-size:12px;}
+    .finAlertsCtrl{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:11px;}
+    .finAlertsCtrl input{width:90px;padding:6px 8px;border-radius:10px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:var(--text);}
+    .finAlertsList{margin-top:10px;display:flex;flex-direction:column;gap:8px;}
+    .finAlert{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);}
+    .finAlert .dot{width:10px;height:10px;border-radius:999px;margin-top:4px;}
+    .finAlert .aT{font-weight:900;font-size:12px;}
+    .finAlert .aD{color:var(--muted);font-size:11px;margin-top:2px;line-height:1.25;}
+    .finAlert.good .dot{background:var(--good);}
+    .finAlert.warn .dot{background:var(--warn);}
+    .finAlert.bad  .dot{background:var(--bad);}
+    .finCharts{display:grid;grid-template-columns:1fr;gap:10px;margin-top:10px;}
+    .svgBox{border-radius:16px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);padding:10px;}
+    @media (min-width: 1024px){
+      .finKpis{grid-template-columns:1fr 1fr 1fr 1fr;}
+      .finCharts{grid-template-columns: 1fr 1fr;}
+    }
+
+
+    /* === Ventana independiente: Indicadores financieros === */
+    .finOverlay{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:9999;padding:18px;}
+    .finOverlay.show{display:flex;}
+    .finWindow{width:min(1180px, 96vw);max-height:92vh;overflow:auto;border-radius:16px;box-shadow:0 30px 80px rgba(0,0,0,.55); background: rgba(10,15,25,0.98); border:1px solid rgba(255,255,255,.14);}
+    .finWindow .panel.finModule{margin:0;border-radius:16px; background: rgba(10,15,25,0.98);}
+    .finHeader{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+    .finHeaderRight{display:flex;align-items:center;gap:10px;}
+    .iconBtn{appearance:none;border:1px solid rgba(255,255,255,.16);background:rgba(0,0,0,.18);color:rgba(255,255,255,.9);
+      width:34px;height:34px;border-radius:10px;cursor:pointer;display:grid;place-items:center;}
+    .iconBtn:hover{background:rgba(0,0,0,.28);}
+
+
+    .finTip{
+      position:absolute;
+      pointer-events:none;
+      padding:8px 10px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.16);
+      background: rgba(10,15,25,.96);
+      color: rgba(255,255,255,.92);
+      font-size:12px;
+      font-weight:700;
+      box-shadow: 0 18px 55px rgba(0,0,0,.45);
+      max-width: 260px;
+      line-height:1.25;
+      z-index: 5;
+    }
+    .finTip .mut{opacity:.75;font-weight:650;}
+
+
+/* FIX: ocultar pestaña Alertas dentro de la ventana Detalles (solo en modal) */
+#rtAl{display:none !important;}
+#rightAlertas{display:none !important;}
+
+</style>
+</head>
+<body>
+
+  <!-- CSS toggle for drawer -->
+  <input type="checkbox" id="navToggle" />
+
+  <div class="appbar">
+    <label class="burgerLabel" for="navToggle" title="Abrir filtros"><span></span></label>
+    <div class="t">Check Inn - Monitor Financiero <span id="titleFiltersTop" class="titleFilters"></span></div>
+    <button class="primary" id="btnRefreshTop" title="Actualizar datos">Actualizar</button>
+    <button id="btnPDF" title="Descargar reporte PDF">PDF</button>
+    <button id="btnFinWin" title="Indicadores financieros">Indicadores</button>
+  </div>
+
+  <!-- Overlay closes drawer when clicked -->
+  <label class="overlay" for="navToggle" aria-label="Cerrar filtros"></label>
+
+  <aside class="drawer" aria-label="Filtros">
+    <div class="closeRow">
+      <div class="h">Filtros de consulta</div>
+      <label class="closeX" for="navToggle" title="Cerrar">✕</label>
+    </div>
+
+    <div class="brand">
+      <div class="logo"></div>
+      <div>
+        <h1>Check Inn</h1>
+        <div class="sub">Monitor Financiero</div>
+      </div>
+    </div>
+
+    <button class="primary" id="btnRefresh" style="width:100%;">Actualizar datos</button>
+    <button id="btnPDF2" style="width:100%; margin-top:10px;" title="Descargar reporte PDF">Descargar PDF</button>
+    <div class="status" id="status"><span class="dot"></span>Listo (actualización manual)</div>
+
+    <details class="fblock" id="dAno" open>
+      <summary>Año <span class="chev">▾</span></summary>
+      <div class="comboPanel" data-filter="Año" data-label="cAnoLbl">
+        <div class="comboTop">
+          <input type="text" placeholder="Buscar…" />
+          <!-- Año: selección única (sin 'Seleccionar todo') -->
+        </div>
+        <div class="opts"></div>
+        <div class="small" style="margin-top:8px;"><span id="cAnoLbl">—</span></div>
+      </div>
+    </details>
+
+    <details class="fblock" id="dMes" open>
+      <summary>Mes <span class="chev">▾</span></summary>
+      <div class="comboPanel" data-filter="Mes" data-label="cMesLbl">
+        <div class="comboTop">
+          <input type="text" placeholder="Buscar…" />
+          <div class="toggleAll on" data-action="toggle">Seleccionar todo</div>
+        </div>
+        <div class="opts"></div>
+        <div class="small" style="margin-top:8px;"><span id="cMesLbl">Todos</span></div>
+      </div>
+    </details>
+
+    <details class="fblock" id="dCat" open>
+      <summary>Categoría <span class="chev">▾</span></summary>
+      <div class="comboPanel" data-filter="CATEGORIA" data-label="cCatLbl">
+        <div class="comboTop">
+          <input type="text" placeholder="Buscar…" />
+          <div class="toggleAll on" data-action="toggle">Seleccionar todo</div>
+        </div>
+        <div class="opts"></div>
+        <div class="small" style="margin-top:8px;"><span id="cCatLbl">Todos</span></div>
+      </div>
+    </details>
+
+    <details class="fblock" id="dCon" open>
+      <summary>Concepto <span class="chev">▾</span></summary>
+      <div class="comboPanel" data-filter="CONCEPTO" data-label="cConLbl">
+        <div class="comboTop">
+          <input type="text" placeholder="Buscar…" />
+          <div class="toggleAll on" data-action="toggle">Seleccionar todo</div>
+        </div>
+        <div class="opts"></div>
+        <div class="small" style="margin-top:8px;"><span id="cConLbl">Todos</span></div>
+      </div>
+    </details>
+
+    <details class="fblock" id="dCta" open>
+      <summary>Cuenta bancaria <span class="chev">▾</span></summary>
+      <div class="comboPanel" data-filter="Cuenta bancaria" data-label="cCtaLbl">
+        <div class="comboTop">
+          <input type="text" placeholder="Buscar…" />
+          <div class="toggleAll on" data-action="toggle">Seleccionar todo</div>
+        </div>
+        <div class="opts"></div>
+        <div class="small" style="margin-top:8px;"><span id="cCtaLbl">Todos</span></div>
+      </div>
+    </details>
+
+    <label>Buscar (Categoría/Concepto/Cuenta)</label>
+    <input id="q" class="searchInput" placeholder="ej. limpieza, bbva, stripe..." />
+
+    <div class="btns">
+      <button id="btnReset">Reset filtros</button>
+    </div>
+
+    <div class="hr"></div>
+    <label>Esperado mensual total (Ingresos)</label>
+    <input id="expectedIncome" class="searchInput" type="number" step="1000" min="0" />
+    <div class="small">Este valor se usa como referencia fija para el KPI de Cumplimiento MENSUAL y ANUAL de Ingresos (Real / Esperado). Se guarda en este navegador.</div>
+  </aside>
+
+  <div class="wrap">
+    <section class="card main">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">
+        <div>
+          <div class="titleBig">Monitor Financiero - Check Inn</div>
+          <div class="subtitle" id="titleFiltersMain">• Año: — • Mes: —</div>
+        </div>
+        <div class="small" id="lastUpdate">—</div>
+      </div>
+
+      <!-- KPIs always visible (both Egresos + Ingresos) -->
+      <div class="kpis">
+        <div class="kpi">
+          <div class="t">Egresos (selección)</div>
+          <div class="v" id="kRealE">$0</div>
+          <div class="s" id="kRowsE">0 filas</div>
+
+          <div class="hr" style="margin:10px 0;"></div>
+          <div class="t">Avance MENSUAL de Egresos</div>
+          <div class="v" id="kAvME">—</div>
+          <div class="s" id="kAvMEDesc">—</div>
+          <div class="pwrap"><div class="pbar" id="pME"><div class="marker" title="100%"></div><i></i></div></div>
+        </div>
+
+      <div class="hr"></div>
+
+      <div class="section-title">Reservas (Cloud Run)</div>
+      <div class="small" style="margin-top:6px;color:var(--muted)">
+        Filtra por alojamiento y tipo de reserva (Airbnb/Booking/Directo, etc.). Los datos se cargan cuando entras a la pestaña <b>Reservas</b>.
+      </div>
+
+      <div class="comboPanel" style="margin-top:10px;">
+        <div class="comboLbl">Alojamiento <span class="badge" id="resPropsLbl">—</span></div>
+        <div class="comboTop">
+          <input type="text" placeholder="(búsqueda deshabilitada en reservas)" disabled />
+          <button class="toggleAll" type="button" title="En reservas, si no seleccionas nada se asume TODO.">Todos</button>
+        </div>
+        <div class="opts" id="resProps" style="max-height:180px;overflow:auto"></div>
+      </div>
+
+      <div class="comboPanel" style="margin-top:10px;">
+        <div class="comboLbl">Tipo reserva <span class="badge" id="resTypesLbl">—</span></div>
+        <div class="comboTop">
+          <input type="text" placeholder="(búsqueda deshabilitada en reservas)" disabled />
+          <button class="toggleAll" type="button" title="En reservas, si no seleccionas nada se asume TODO.">Todos</button>
+        </div>
+        <div class="opts" id="resTypes" style="max-height:180px;overflow:auto"></div>
+      </div>
+
+
+        <div class="kpi">
+          <div class="t">Ingresos (selección)</div>
+          <div class="v" id="kRealI">$0</div>
+          <div class="s" id="kRowsI">0 filas</div>
+
+          <div class="hr" style="margin:10px 0;"></div>
+          <div class="t">Cumplimiento MENSUAL de Ingresos</div>
+          <div class="v" id="kAvMI">—</div>
+          <div class="s" id="kAvMIDesc">—</div>
+          <div class="pwrap"><div class="pbar" id="pMI"><div class="marker" title="100%"></div><i></i></div></div>
+        </div>
+
+        <div class="kpi">
+          <div class="t">Avance ANUAL egresos</div>
+          <div class="v" id="kAvYE">—</div>
+          <div class="s" id="kAvYEDesc">—</div>
+          <div class="pwrap"><div class="pbar" id="pYE"><div class="marker" title="100%"></div><i></i></div></div>
+        </div>
+        <div class="kpi">
+          <div class="t">Cumplimiento ANUAL ingresos</div>
+          <div class="v" id="kAvYI">—</div>
+          <div class="s" id="kAvYIDesc">—</div>
+          <div class="pwrap"><div class="pbar" id="pYI"><div class="marker" title="100%"></div><i></i></div></div>
+        </div>
+</div>
+
+      <div class="topbar">
+        <div class="tabs" role="tablist" aria-label="Tipo">
+          <div class="tab active" id="tabE" role="tab" aria-selected="true">Egresos</div>
+          <div class="tab" id="tabI" role="tab" aria-selected="false">Ingresos</div>
+          <div class="tab" id="tabA" role="tab" aria-selected="false">Alertas</div>
+      <div class="tab" id="tabR" role="tab" aria-selected="false">Reservas</div>
+        </div>
+        <span class="pill" id="tipoPill">Tipo: Egresos</span>
+        <span class="pill">Orden: Categoría → Concepto</span>
+        <span class="spacer"></span>
+        <span class="pill" id="viewPill">Vista: Detalle</span>
+      </div>
+
+      <div class="grid">
+        <div class="panel">
+          <div class="section-title" id="mainTableTitle">Egresos (Presupuesto vs Real)</div>
+          <div class="small" id="mainTableSub">Real y presupuesto en positivo (valor absoluto).</div>
+          <div class="scroll" style="margin-top:10px;">
+            <table>
+              <thead><tr id="theadRow"></tr></thead>
+              <tbody id="tbMain"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="section-title" id="rightTitle">Detalle (drilldown)</div>
+          <div class="small" id="rightSub">Selecciona un renglón para ver los movimientos que lo componen.</div>
+
+          <div class="hr"></div>
+
+          <div class="tabs" role="tablist" aria-label="Detalle y alertas" style="margin-top:8px;">
+            <div class="tab active" id="rtDet" role="tab" aria-selected="true">Detalles</div>
+            <div class="tab" id="rtAl" role="tab" aria-selected="false">Alertas <span class="pill" id="rtAlCount" style="margin-left:6px;">0</span></div>
+          </div>
+
+          <div id="rightDetalle">
+            <div id="selInfo" class="small" style="color:var(--muted)">Sin selección.</div>
+            <div class="scroll" style="margin-top:10px; max-height: 52vh;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Mes</th><th>Cuenta</th><th>TIPO</th><th>Categoría</th><th>Concepto</th><th>Descripción</th><th>Factura</th><th class="num">Monto</th>
+                  </tr>
+                </thead>
+                <tbody id="tbD"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="rightAlertas" class="hide">
+            <div id="alertInfo" class="small" style="color:var(--muted)">Alertas del tipo seleccionado.</div>
+            <div class="scroll" style="margin-top:10px; max-height: 52vh;">
+              <table>
+                <thead>
+                  <tr><th>Tipo</th><th>Categoría</th><th>Concepto</th><th>Mes</th><th class="num">%</th><th>Sev</th></tr>
+                </thead>
+                <tbody id="tbA"></tbody>
+              </table>
+            </div>
+            <div class="small" style="margin-top:8px; color:var(--muted)">Tip: click en una alerta para abrir su detalle.</div>
+          </div>
+        
+      <!-- MÓDULO NUEVO: Indicadores financieros (seguro; no modifica tabs Egresos/Ingresos) -->
+      <!-- Indicadores financieros (movido a ventana independiente) -->
+
+
+</div>
+      </div>
+    </section>
+  </div>
+
+  
+  <!-- Ventana independiente: Indicadores financieros -->
+  <div class="finOverlay" id="finOverlay" aria-hidden="true">
+    <div class="finWindow" role="dialog" aria-label="Indicadores financieros">
+      <div class="panel finModule" id="finModule">
+        <div class="finHeader">
+          <div>
+            <div class="h">Indicadores financieros <span id="finTitleFilters" class="titleFilters"></span></div>
+            <div class="sub">Desempeño del negocio para el año seleccionado (respeta filtros activos).</div>
+          </div>
+          <div class="finHeaderRight">
+            <span class="pill" id="finYearPill">Año: —</span>
+            <button class="iconBtn" id="btnFinClose" title="Cerrar">✕</button>
+          </div>
+        </div>
+
+        <div class="finKpis">
+          <div class="finKpi">
+            <div class="t">Ingresos YTD</div>
+            <div class="v" id="finIngYTD">$0</div>
+            <div class="s" id="finIngRR">Run-rate anual: —</div>
+          </div>
+          <div class="finKpi">
+            <div class="t">Egresos YTD</div>
+            <div class="v" id="finEgrYTD">$0</div>
+            <div class="s" id="finEgrRR">Run-rate anual: —</div>
+          </div>
+          <div class="finKpi">
+            <div class="t">Utilidad neta YTD</div>
+            <div class="v" id="finUtilYTD">$0</div>
+            <div class="s" id="finUtilRR">Prom. mensual: —</div>
+          </div>
+          <div class="finKpi">
+            <div class="t">Margen neto YTD</div>
+            <div class="v" id="finMargYTD">—</div>
+            <div class="s" id="finMargHint">Utilidad / Ingresos</div>
+          </div>
+        </div>
+
+
+        <div class="finAlerts">
+          <div class="finAlertsTop">
+            <div class="ttl">Alertas financieras automáticas</div>
+            <div class="finAlertsCtrl">
+              <span>Margen mínimo:</span>
+              <input id="finMargThr" type="number" min="0" max="100" step="1" />
+              <span>%</span>
+            </div>
+          </div>
+          <div class="finAlertsList" id="finAlertsList"></div>
+        </div>
+
+        <div class="finCharts">
+          <div class="svgBox">
+            <div class="small" style="margin-bottom:6px;color:var(--muted)">Tendencia mensual (Ingresos, Egresos, Utilidad)</div>
+            <div id="finChartLine"></div>
+          </div>
+          <div class="svgBox">
+            <div class="small" style="margin-bottom:6px;color:var(--muted)">Margen neto mensual</div>
+            <div id="finChartMargin"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script src="./app.js"></script>
+
+</body>
+</html>
