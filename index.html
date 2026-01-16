@@ -1,4 +1,5 @@
 
+
 <!doctype html>
 <html lang="es">
 <head>
@@ -830,17 +831,10 @@
 
   // ✅ Fuerza el backend correcto (Cloud Run)
   window.API_BASE = "https://checkinndashboard1-1044570371371.northamerica-south1.run.app";
-// Normaliza: quita '/' al final para evitar dobles slashes al construir URLs
-window.API_BASE = (window.API_BASE || '').replace(/\/+$/, '');
-
 
     // URL fija dentro del código (como pediste)
     window.DATA_ENDPOINT = "https://script.google.com/macros/s/AKfycbwmlnws66Fz008rDTX9nWmvUEd6akvfT7e_ejgT85MGDAzx3c8iWNjHj05nS2W0qB8_cw/exec";
 
-    
-    // IMPORTANT: Lodgify endpoints run in Cloud Run (or another backend).
-    // Set API_BASE to that backend base URL so GitHub Pages does not call /api/* on github.io (404).
-    // Example: window.API_BASE = "https://your-service-xxxxx-uc.a.run.app";
     // Parámetro editable (menú): Esperado mensual total para KPIs de Ingresos
     const EXPECTED_INCOME_KEY = 'expected_income_monthly_total_v1';
     let EXPECTED_INCOME_MONTHLY = 700000; // default
@@ -3449,15 +3443,27 @@ function getFilterSummary(){
       // =========================
       const API_BASE = (()=>{
         // Prefer explicit API_BASE if you set it
-        if (window.API_BASE) return window.API_BASE;
+        if (window.API_BASE) return String(window.API_BASE).replace(/\/+$/,'');
         // If DATA_ENDPOINT is Cloud Run, derive base
         if (window.DATA_ENDPOINT && window.DATA_ENDPOINT.includes('/api/')) {
-          return window.DATA_ENDPOINT.split('/api/')[0];
+          return String(window.DATA_ENDPOINT.split('/api/')[0]).replace(/\/+$/,'');
         }
         return '';
       })();
 
       let __reservasInitialized = false;
+
+      // Evita respuestas 304/Cache en GitHub Pages y navegadores
+      function addNoCache(url){
+        try{
+          const u = new URL(url, window.location.href);
+          u.searchParams.set('_ts', String(Date.now()));
+          return u.toString();
+        }catch{
+          const sep = url.includes('?') ? '&' : '?';
+          return url + sep + '_ts=' + Date.now();
+        }
+      }
 
       function isoTodayPlus(days){
         const d = new Date();
@@ -3476,15 +3482,11 @@ function getFilterSummary(){
         if (toEl && !toEl.value) toEl.value = isoTodayPlus(0);
 
         // Load properties
-        if(!API_BASE){
-          setResMsg("Configura window.API_BASE con la URL base de tu backend (Cloud Run) para poder leer Lodgify desde GitHub Pages.");
-          return;
-        }
         try{
           const sel = document.getElementById('resProperty');
           if (sel){
             sel.innerHTML = '<option value="">Todos</option>';
-            const r = await fetch(`${API_BASE}/api/lodgify/properties`);
+            const r = await fetch(addNoCache(`${API_BASE}/api/lodgify/properties`), { cache: 'no-store', headers: { 'Cache-Control': 'no-cache' } });
             if(!r.ok) throw new Error(`properties ${r.status}`);
             const data = await r.json();
             const items = Array.isArray(data?.items) ? data.items : (Array.isArray(data) ? data : []);
@@ -3542,7 +3544,7 @@ function getFilterSummary(){
 
         try{
           const url = `${API_BASE}/api/lodgify/bookings?`+qs.toString();
-          const r = await fetch(url);
+          const r = await fetch(addNoCache(url), { cache: 'no-store', headers: { 'Cache-Control': 'no-cache' } });
           if(!r.ok){
             const t = await r.text().catch(()=> '');
             throw new Error(`bookings ${r.status}: ${t.slice(0,200)}`);
