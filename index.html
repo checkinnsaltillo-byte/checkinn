@@ -959,7 +959,7 @@
       document.getElementById('tabE').setAttribute('aria-selected', v==='E'?'true':'false');
       document.getElementById('tabI').setAttribute('aria-selected', v==='I'?'true':'false');
       document.getElementById('tabA').setAttribute('aria-selected', v==='A'?'true':'false');
-      const tabR = document.getElementById('tabR');
+      //const tabR = document.getElementById('tabR');
       if (tabR) tabR.setAttribute('aria-selected', v==='R'?'true':'false');
 
       SELECTED_KEY = null;
@@ -2461,7 +2461,7 @@ function render(){
       document.getElementById('tabE').addEventListener('click', ()=> setTipo('E'));
       document.getElementById('tabI').addEventListener('click', ()=> setTipo('I'));
       document.getElementById('tabA').addEventListener('click', ()=> setTipo('A'));
-      const tabR = document.getElementById('tabR');
+      //const tabR = document.getElementById('tabR');
       if (tabR) tabR.addEventListener('click', ()=> { setTipo('R'); initReservasOnce(); });
 
       const rtDet = document.getElementById('rtDet');
