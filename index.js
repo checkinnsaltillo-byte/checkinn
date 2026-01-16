@@ -26,6 +26,10 @@ app.use(
   })
 );
 
+// (Opcional pero útil) JSON bodies
+app.use(express.json());
+
+// Health
 app.get("/", (req, res) => res.send("ok"));
 app.get("/api/health", (req, res) => res.json({ ok: true }));
 
@@ -49,7 +53,7 @@ app.get("/api/data", async (req, res) => {
       res.type("text/plain").send(text);
     }
   } catch (e) {
-    console.error(e);
+    console.error("[/api/data] proxy_failed:", e);
     res.status(500).json({ ok: false, error: "proxy_failed", message: e.message });
   }
 });
@@ -57,6 +61,9 @@ app.get("/api/data", async (req, res) => {
 // ---------- LODGIFY PROXY ----------
 const LODGIFY_API_BASE = "https://api.lodgify.com";
 const LODGIFY_API_KEY = process.env.LODGIFY_API_KEY || "";
+
+// Timeout configurable
+const LODGIFY_TIMEOUT_MS = Number(process.env.LODGIFY_TIMEOUT_MS || 15000);
 
 function requireLodgifyKey(res) {
   if (!LODGIFY_API_KEY) {
@@ -71,21 +78,73 @@ function requireLodgifyKey(res) {
   return true;
 }
 
+// Helper: fetch con timeout + abort
+async function fetchWithTimeout(url, options = {}, timeoutMs = 15000) {
+  const controller = new AbortController();
+  const t = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const r = await fetch(url, { ...options, signal: controller.signal });
+    return r;
+  } finally {
+    clearTimeout(t);
+  }
+}
+
 async function lodgifyGet(path, query, res) {
   const url = new URL(LODGIFY_API_BASE + path);
+
   for (const [k, v] of Object.entries(query || {})) {
-    if (v !== undefined && v !== null && String(v).length > 0) url.searchParams.set(k, String(v));
+    if (v !== undefined && v !== null && String(v).length > 0) {
+      url.searchParams.set(k, String(v));
+    }
   }
 
-  const r = await fetch(url.toString(), {
-    headers: {
-      "X-ApiKey": LODGIFY_API_KEY,
-      "Accept": "application/json",
-    },
-  });
+  // Anti-cache (muy importante para GH Pages)
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
+
+  const target = url.toString();
+  const started = Date.now();
+  console.log(`[lodgify] GET ${target}`);
+
+  let r;
+  try {
+    r = await fetchWithTimeout(
+      target,
+      {
+        headers: {
+          // Lodgify: header correcto es X-ApiKey :contentReference[oaicite:1]{index=1}
+          "X-ApiKey": LODGIFY_API_KEY,
+          "Accept": "application/json",
+        },
+      },
+      LODGIFY_TIMEOUT_MS
+    );
+  } catch (e) {
+    const ms = Date.now() - started;
+    const isAbort = e?.name === "AbortError";
+    console.error(`[lodgify] FAILED ${path} in ${ms}ms`, e);
+
+    // 🔥 Esto evita "pending" en el navegador: siempre responde
+    return res.status(504).json({
+      ok: false,
+      error: isAbort ? "lodgify_timeout" : "lodgify_fetch_failed",
+      message: isAbort
+        ? `Lodgify request timed out after ${LODGIFY_TIMEOUT_MS}ms`
+        : (e.message || "Fetch failed"),
+      path,
+    });
+  }
+
+  const ms = Date.now() - started;
+  console.log(`[lodgify] ${r.status} ${path} in ${ms}ms`);
 
   const text = await r.text();
   res.status(r.status);
+
+  // Si Lodgify regresa HTML o texto (errores), lo pasamos tal cual.
   try {
     res.json(JSON.parse(text));
   } catch {
@@ -113,6 +172,16 @@ app.get("/api/lodgify/bookings", async (req, res) => {
     console.error(e);
     res.status(500).json({ ok: false, error: "lodgify_bookings_failed", message: e.message });
   }
+});
+
+// ✅ Error handler (incluye errores de CORS)
+app.use((err, req, res, next) => {
+  console.error("[express error]", err);
+  res.status(500).json({
+    ok: false,
+    error: "server_error",
+    message: err?.message || "Unknown error",
+  });
 });
 
 app.listen(PORT, "0.0.0.0", () => console.log(`Listening on ${PORT}`));
