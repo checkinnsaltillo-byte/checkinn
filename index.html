@@ -1,5 +1,4 @@
 
-
 <!doctype html>
 <html lang="es">
 <head>
@@ -477,6 +476,7 @@
     <button class="primary" id="btnRefreshTop" title="Actualizar datos">Actualizar</button>
     <button id="btnPDF" title="Descargar reporte PDF">PDF</button>
     <button id="btnFinWin" title="Indicadores financieros">Indicadores</button>
+    <button id="btnReservasTop" title="Reservas (Lodgify)">Reservas</button>
   </div>
 
   <!-- Overlay closes drawer when clicked -->
@@ -628,8 +628,7 @@
           <div class="tab active" id="tabE" role="tab" aria-selected="true">Egresos</div>
           <div class="tab" id="tabI" role="tab" aria-selected="false">Ingresos</div>
           <div class="tab" id="tabA" role="tab" aria-selected="false">Alertas</div>
-          <div class="tab" id="tabR" role="tab" aria-selected="false">Reservas</div>
-        </div>
+</div>
         <span class="pill" id="tipoPill">Tipo: Egresos</span>
         <span class="pill">Orden: Categoría → Concepto</span>
         <span class="spacer"></span>
@@ -640,67 +639,7 @@
         <div class="panel">
           <div class="section-title" id="mainTableTitle">Egresos (Presupuesto vs Real)</div>
           <div class="small" id="mainTableSub">Real y presupuesto en positivo (valor absoluto).</div>
-          <div class="scroll" style="margin-top:10px;">
-            <table>
-              <thead><tr id="theadRow"></tr></thead>
-              <tbody id="tbMain"></tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="panel">
-          <div class="section-title" id="rightTitle">Detalle (drilldown)</div>
-          <div class="small" id="rightSub">Selecciona un renglón para ver los movimientos que lo componen.</div>
-
-          <div class="hr"></div>
-
-          <div class="tabs" role="tablist" aria-label="Detalle y alertas" style="margin-top:8px;">
-            <div class="tab active" id="rtDet" role="tab" aria-selected="true">Detalles</div>
-            <div class="tab" id="rtAl" role="tab" aria-selected="false">Alertas <span class="pill" id="rtAlCount" style="margin-left:6px;">0</span></div>
-          </div>
-
-          <div id="rightDetalle">
-            <div id="selInfo" class="small" style="color:var(--muted)">Sin selección.</div>
-            <div class="scroll" style="margin-top:10px; max-height: 52vh;">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Mes</th><th>Cuenta</th><th>TIPO</th><th>Categoría</th><th>Concepto</th><th>Descripción</th><th>Factura</th><th class="num">Monto</th>
-                  </tr>
-                </thead>
-                <tbody id="tbD"></tbody>
-              </table>
-            </div>
-          </div>
-
-          <div id="rightAlertas" class="hide">
-            <div id="alertInfo" class="small" style="color:var(--muted)">Alertas del tipo seleccionado.</div>
-            <div class="scroll" style="margin-top:10px; max-height: 52vh;">
-              <table>
-                <thead>
-                  <tr><th>Tipo</th><th>Categoría</th><th>Concepto</th><th>Mes</th><th class="num">%</th><th>Sev</th></tr>
-                </thead>
-                <tbody id="tbA"></tbody>
-              </table>
-            </div>
-            <div class="small" style="margin-top:8px; color:var(--muted)">Tip: click en una alerta para abrir su detalle.</div>
-          </div>
-
-      <!-- MÓDULO NUEVO: Indicadores financieros (seguro; no modifica tabs Egresos/Ingresos) -->
-      <!-- Indicadores financieros (movido a ventana independiente) -->
-
-
-</div>
-      </div>
-    </section>
-  </div>
-
-
-  <!-- Ventana independiente: Indicadores financieros -->
-  <div class="finOverlay" id="finOverlay" aria-hidden="true">
-    <div class="finWindow" role="dialog" aria-label="Indicadores financieros">
-      <div class="panel finModule" id="finModule">
-  <!-- RESERVAS MODULE (Lodgify via Cloud Run) -->
+<!-- RESERVAS MODULE (Lodgify via Cloud Run) -->
   <div id="reservasModule" class="hide" style="margin-top:14px;">
     <div class="card" style="padding:14px;">
       <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
@@ -762,7 +701,71 @@
     </div>
   </div>
 
-        <div class="finHeader">
+        
+<div id="financeTableWrap">
+          <div class="scroll" style="margin-top:10px;">
+            <table>
+              <thead><tr id="theadRow"></tr></thead>
+              <tbody id="tbMain"></tbody>
+            </table>
+          </div>
+</div>
+
+        </div>
+
+        <div class="panel">
+          <div class="section-title" id="rightTitle">Detalle (drilldown)</div>
+          <div class="small" id="rightSub">Selecciona un renglón para ver los movimientos que lo componen.</div>
+
+          <div class="hr"></div>
+
+          <div class="tabs" role="tablist" aria-label="Detalle y alertas" style="margin-top:8px;">
+            <div class="tab active" id="rtDet" role="tab" aria-selected="true">Detalles</div>
+            <div class="tab" id="rtAl" role="tab" aria-selected="false">Alertas <span class="pill" id="rtAlCount" style="margin-left:6px;">0</span></div>
+          </div>
+
+          <div id="rightDetalle">
+            <div id="selInfo" class="small" style="color:var(--muted)">Sin selección.</div>
+            <div class="scroll" style="margin-top:10px; max-height: 52vh;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Mes</th><th>Cuenta</th><th>TIPO</th><th>Categoría</th><th>Concepto</th><th>Descripción</th><th>Factura</th><th class="num">Monto</th>
+                  </tr>
+                </thead>
+                <tbody id="tbD"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="rightAlertas" class="hide">
+            <div id="alertInfo" class="small" style="color:var(--muted)">Alertas del tipo seleccionado.</div>
+            <div class="scroll" style="margin-top:10px; max-height: 52vh;">
+              <table>
+                <thead>
+                  <tr><th>Tipo</th><th>Categoría</th><th>Concepto</th><th>Mes</th><th class="num">%</th><th>Sev</th></tr>
+                </thead>
+                <tbody id="tbA"></tbody>
+              </table>
+            </div>
+            <div class="small" style="margin-top:8px; color:var(--muted)">Tip: click en una alerta para abrir su detalle.</div>
+          </div>
+
+      <!-- MÓDULO NUEVO: Indicadores financieros (seguro; no modifica tabs Egresos/Ingresos) -->
+      <!-- Indicadores financieros (movido a ventana independiente) -->
+
+
+</div>
+      </div>
+    </section>
+  </div>
+
+
+  <!-- Ventana independiente: Indicadores financieros -->
+  <div class="finOverlay" id="finOverlay" aria-hidden="true">
+    <div class="finWindow" role="dialog" aria-label="Indicadores financieros">
+      <div class="panel finModule" id="finModule">
+  <div class="finHeader">
           <div>
             <div class="h">Indicadores financieros <span id="finTitleFilters" class="titleFilters"></span></div>
             <div class="sub">Desempeño del negocio para el año seleccionado (respeta filtros activos).</div>
@@ -943,39 +946,44 @@
 
     const PANEL_RENDER = {}; // permite re-render de paneles (Mes es esclavo de Año)
 
-    function tipoVal(){
-      const id = document.querySelector('.tab.active')?.id;
-      if(id==='tabI') return 'I';
-      if(id==='tabA') return 'A';
-      return 'E';
-    }
+    let CURRENT_TIPO = 'E';
+    function tipoVal(){ return CURRENT_TIPO; }
     function setTipo(v){
-      // Toggle finance vs reservas module
-      const fin = document.getElementById('finModule');
-      const res = document.getElementById('reservasModule');
+      CURRENT_TIPO = v;
+
+      const reservas = document.getElementById('reservasModule');
+      const financeWrap = document.getElementById('financeTableWrap');
+      const tipoPill = document.getElementById('tipoPill');
+      const mainTitle = document.getElementById('mainTableTitle');
+      const mainSub = document.getElementById('mainTableSub');
+
       if (v === 'R') {
-        if (fin) fin.classList.add('hide');
-        if (res) res.classList.remove('hide');
+        if (reservas) reservas.classList.remove('hide');
+        if (financeWrap) financeWrap.classList.add('hide');
+        if (tipoPill) tipoPill.textContent = 'Tipo: Reservas';
+        if (mainTitle) mainTitle.textContent = 'Reservas (Lodgify)';
+        if (mainSub) mainSub.textContent = 'Reservas y métricas por rango de fechas (vía Lodgify).';
       } else {
-        if (fin) fin.classList.remove('hide');
-        if (res) res.classList.add('hide');
+        if (reservas) reservas.classList.add('hide');
+        if (financeWrap) financeWrap.classList.remove('hide');
       }
 
       document.getElementById('tabE').classList.toggle('active', v==='E');
       document.getElementById('tabI').classList.toggle('active', v==='I');
       document.getElementById('tabA').classList.toggle('active', v==='A');
-      const tabR = document.getElementById('tabR');
-      if (tabR) tabR.classList.toggle('active', v==='R');
       document.getElementById('tabE').setAttribute('aria-selected', v==='E'?'true':'false');
       document.getElementById('tabI').setAttribute('aria-selected', v==='I'?'true':'false');
       document.getElementById('tabA').setAttribute('aria-selected', v==='A'?'true':'false');
-      if (tabR) tabR.setAttribute('aria-selected', v==='R'?'true':'false');
 
       SELECTED_KEY = null;
       SELECTED_SRC = null;
       setRightView('detalle');
       syncTipoUI();
-      render();
+
+      // Solo re-render financiero en E/I/A
+      if (v !== 'R') {
+        render();
+      }
     }
 
 
@@ -2450,6 +2458,8 @@ function render(){
       }
 
       if(btnFinWin) btnFinWin.addEventListener('click', openFin);
+      const btnReservasTop = document.getElementById('btnReservasTop');
+      if (btnReservasTop) btnReservasTop.addEventListener('click', ()=> { setTipo('R'); initReservasOnce(); });
       if(btnFinClose) btnFinClose.addEventListener('click', closeFin);
       if(finOverlay) finOverlay.addEventListener('click', (e)=>{ if(e.target === finOverlay) closeFin(); });
       document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') closeFin(); });
@@ -2470,9 +2480,7 @@ function render(){
       document.getElementById('tabE').addEventListener('click', ()=> setTipo('E'));
       document.getElementById('tabI').addEventListener('click', ()=> setTipo('I'));
       document.getElementById('tabA').addEventListener('click', ()=> setTipo('A'));
-      if (tabR) tabR.addEventListener('click', ()=> { setTipo('R'); initReservasOnce(); });
-
-      const rtDet = document.getElementById('rtDet');
+const rtDet = document.getElementById('rtDet');
       const rtAl  = document.getElementById('rtAl');
       if(rtDet) rtDet.addEventListener('click', ()=> setRightView('detalle'));
       if(rtAl) rtAl.addEventListener('click', ()=>{
