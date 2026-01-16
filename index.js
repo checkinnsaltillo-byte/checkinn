@@ -27,6 +27,7 @@ app.use(
   })
 );
 
+
 app.get("/", (req, res) => res.send("ok"));
 app.get("/api/health", (req, res) => res.json({ ok: true }));
 
