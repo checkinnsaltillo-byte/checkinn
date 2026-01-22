@@ -417,7 +417,7 @@
     .finWindow .panel.finModule{margin:0;border-radius:16px; background: rgba(10,15,25,0.98);}
     .finHeader{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
     .finHeaderRight{display:flex;align-items:center;gap:10px;}
-    .iconBtn, a.iconBtn{appearance:none;border:1px solid rgba(255,255,255,.16);background:rgba(0,0,0,.18);color:rgba(255,255,255,.9);
+    .iconBtn{appearance:none;border:1px solid rgba(255,255,255,.16);background:rgba(0,0,0,.18);color:rgba(255,255,255,.9);
       width:34px;height:34px;border-radius:10px;cursor:pointer;display:grid;place-items:center;}
     .iconBtn:hover{background:rgba(0,0,0,.28);}
 
@@ -465,17 +465,111 @@
     .btn:hover{ filter: brightness(1.05); }
 \n  /* ===== Ventana independiente: Reservas ===== */\n  .modalOverlay{position:fixed; inset:0; background:rgba(2,6,23,.65); backdrop-filter: blur(6px); display:none; align-items:center; justify-content:center; z-index:9999;}\n  .modalOverlay.show{display:flex;}\n  .modalWindow{width:min(1180px, calc(100vw - 28px)); height:min(86vh, 860px); background:linear-gradient(180deg, rgba(15,23,42,.95), rgba(2,6,23,.95)); border:1px solid rgba(148,163,184,.22); border-radius:16px; box-shadow:0 25px 60px rgba(0,0,0,.45); overflow:hidden; display:flex; flex-direction:column;}\n  .modalHeader{display:flex; align-items:center; gap:10px; padding:12px 14px; border-bottom:1px solid rgba(148,163,184,.14);} \n  .modalTitle{font-weight:800; letter-spacing:.2px;}\n  .modalHeader .spacer{flex:1;}\n  .iconBtn{border:1px solid rgba(148,163,184,.18); background:rgba(2,6,23,.35); color:var(--txt); border-radius:10px; padding:8px 10px; cursor:pointer;}\n  .iconBtn:hover{filter:brightness(1.06);} \n  .modalBody{padding:14px; overflow:auto;}\n  .modalBody .card{background:rgba(2,6,23,.28);}\n
 
-    /* ===== Modal por CSS (:target) para Reservas ===== */
-    #reservas.modalOverlay{ display:none; position:fixed; inset:0; z-index:9999; }
-    #reservas.modalOverlay:target{ display:block; }
-    #reservas .modalBackdrop{ position:absolute; inset:0; background:rgba(0,0,0,.55); }
-    /* Asegura que el modal quede por encima del backdrop */
-    #reservas .modalWindow{ position:relative; z-index:1; }
-    
-  </style>
+/* =========================
+   Reservas (Lodgify) Modal
+   ========================= */
+#resvOverlay[hidden]{display:none !important;}
+#resvOverlay{
+  position:fixed; inset:0; z-index:9999;
+  display:flex; align-items:center; justify-content:center;
+  padding: 24px;
+}
+#resvOverlay .resvBackdrop{
+  position:absolute; inset:0; background: rgba(0,0,0,.62);
+}
+#resvOverlay .resvWin{
+  position:relative;
+  width: min(1200px, calc(100vw - 28px));
+  height: min(82vh, 820px);
+  border-radius: 18px;
+  background: rgba(10,14,24,.92);
+  border: 1px solid rgba(255,255,255,.12);
+  box-shadow: 0 28px 90px rgba(0,0,0,.55);
+  backdrop-filter: blur(14px);
+  overflow:hidden;
+  display:flex; flex-direction:column;
+}
+#resvOverlay .resvHead{
+  display:flex; align-items:center; gap:10px;
+  padding: 12px 14px;
+  border-bottom:1px solid rgba(255,255,255,.10);
+}
+#resvOverlay .resvHead .ttl{
+  font-weight: 900; letter-spacing:.2px; font-size: 16px;
+  flex:1;
+}
+#resvOverlay .resvHead .sub{
+  font-size: 12px; opacity:.72; font-weight:700;
+}
+#resvOverlay .iconBtn{
+  width: 36px; height: 36px;
+  border-radius: 12px;
+  display:inline-flex; align-items:center; justify-content:center;
+  background: rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.12);
+  cursor:pointer;
+}
+#resvOverlay .resvBody{ padding: 14px; overflow:auto; }
+#resvOverlay .gridFilters{
+  display:grid; gap:10px;
+  grid-template-columns: 170px 170px 1fr 190px 140px;
+  align-items:end;
+}
+#resvOverlay label span{
+  display:block; font-size:12px; opacity:.72; margin-bottom:6px; font-weight:800;
+}
+#resvOverlay input, #resvOverlay select{
+  width:100%; padding:10px 10px;
+  border-radius: 12px;
+  background: rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.12);
+  color: var(--text);
+}
+#resvOverlay .actBtn{
+  padding:10px 12px; border-radius: 12px;
+  background: linear-gradient(135deg, rgba(106,228,255,.22), rgba(124,92,255,.18));
+  border:1px solid rgba(255,255,255,.14);
+  color: var(--text);
+  cursor:pointer; font-weight: 900;
+}
+#resvOverlay .actBtn:disabled{opacity:.55; cursor:not-allowed;}
+#resvOverlay .kpis{
+  display:grid; gap:10px; margin-top:12px;
+  grid-template-columns: repeat(4, minmax(0,1fr));
+}
+#resvOverlay .kpi{
+  padding:12px; border-radius: 16px;
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.04);
+}
+#resvOverlay .kpi .k{ font-size:12px; opacity:.70; font-weight:800;}
+#resvOverlay .kpi .v{ font-size:20px; font-weight:950; margin-top:6px;}
+#resvOverlay .tblWrap{
+  margin-top:12px;
+  border:1px solid rgba(255,255,255,.10);
+  border-radius: 16px;
+  overflow:hidden;
+  background: rgba(255,255,255,.02);
+}
+#resvOverlay table{ width:100%; border-collapse:collapse; font-size:13px; }
+#resvOverlay th, #resvOverlay td{
+  padding:10px 10px; border-bottom:1px solid rgba(255,255,255,.08);
+  text-align:left; vertical-align:top;
+}
+#resvOverlay thead th{ position:sticky; top:0; background: rgba(10,14,24,.92); z-index:1; }
+#resvOverlay .muted{ opacity:.72; }
+#resvOverlay details{ margin-top:10px; }
+#resvOverlay pre{
+  white-space:pre-wrap; word-break:break-word;
+  background: rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.10);
+  padding:10px; border-radius: 12px;
+  max-height: 220px; overflow:auto;
+}
+
+</style>
 </head>
 <body>
-  <div id="appRoot">
 
   <!-- CSS toggle for drawer -->
   <input type="checkbox" id="navToggle" />
@@ -486,7 +580,7 @@
     <button class="primary" id="btnRefreshTop" title="Actualizar datos">Actualizar</button>
     <button id="btnPDF" title="Descargar reporte PDF">PDF</button>
     <button id="btnFinWin" title="Indicadores financieros">Indicadores</button>
-    <button id="btnReservasTop" class="btnLink" type="button" title="Reservas (Lodgify)">Reservas</button>
+    <button id="btnReservasTop" title="Reservas (Lodgify)">Reservas</button>
   </div>
 
   <!-- Overlay closes drawer when clicked -->
@@ -649,8 +743,61 @@
         <div class="panel">
           <div class="section-title" id="mainTableTitle">Egresos (Presupuesto vs Real)</div>
           <div class="small" id="mainTableSub">Real y presupuesto en positivo (valor absoluto).</div>
+      <div style="display:flex; gap:12px; margin-top:12px; flex-wrap:wrap;">
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          <div class="small" style="color:var(--muted)">Desde</div>
+          <input id="resFrom" type="date" class="input" />
+        </div>
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          <div class="small" style="color:var(--muted)">Hasta</div>
+          <input id="resTo" type="date" class="input" />
+        </div>
+        <div style="display:flex; flex-direction:column; gap:6px; min-width:260px;">
+          <div class="small" style="color:var(--muted)">Alojamiento</div>
+          <select id="resProperty" class="input"></select>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:6px; min-width:220px;">
+          <div class="small" style="color:var(--muted)">Estatus</div>
+          <select id="resStatus" class="input">
+            <option value="">Todos</option>
+            <option value="Booked">Booked</option>
+            <option value="Tentative">Tentative</option>
+            <option value="Declined">Declined</option>
+            <option value="Cancelled">Cancelled</option>
+          </select>
+        </div>
+      </div>
 
-          <div id="financeTableWrap">
+      <div class="grid" style="margin-top:12px; grid-template-columns: repeat(4, minmax(180px,1fr)); gap:10px;">
+        <div class="kpi"><div class="t">Reservas</div><div class="v" id="kResCount">—</div><div class="s small" id="kResCountDesc">—</div></div>
+        <div class="kpi"><div class="t">Noches</div><div class="v" id="kResNights">—</div><div class="s small" id="kResNightsDesc">—</div></div>
+        <div class="kpi"><div class="t">Ingresos (total)</div><div class="v" id="kResRevenue">—</div><div class="s small" id="kResRevenueDesc">—</div></div>
+        <div class="kpi"><div class="t">ADR</div><div class="v" id="kResADR">—</div><div class="s small" id="kResADRDesc">—</div></div>
+      </div>
+
+      <div class="scroll" style="margin-top:12px; max-height:55vh;">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Alojamiento</th>
+              <th>Entrada</th>
+              <th>Salida</th>
+              <th>Estatus</th>
+              <th>Canal</th>
+              <th class="num">Total</th>
+            </tr>
+          </thead>
+          <tbody id="tbReservas"></tbody>
+        </table>
+      </div>
+
+      <div class="small" style="margin-top:10px; color:var(--muted)" id="resMsg">Tip: si no cargan, revisa que tu backend tenga LODGIFY_API_KEY y que /api/lodgify/* responda 200.</div>
+    </div>
+  </div>
+
+        
+<div id="financeTableWrap">
           <div class="scroll" style="margin-top:10px;">
             <table>
               <thead><tr id="theadRow"></tr></thead>
@@ -710,7 +857,7 @@
 
 
   <!-- Ventana independiente: Indicadores financieros -->
-  <div class="finOverlay" id="finOverlay" inert hidden>
+  <div class="finOverlay" id="finOverlay" aria-hidden="true">
     <div class="finWindow" role="dialog" aria-label="Indicadores financieros">
       <div class="panel finModule" id="finModule">
   <div class="finHeader">
@@ -2378,95 +2525,48 @@ function render(){
       const finOverlay = document.getElementById('finOverlay');
       const btnFinClose = document.getElementById('btnFinClose');
 
-      let _lastFocusFin = null;
-
       function openFin(){
         if(!finOverlay) return;
-        _lastFocusFin = document.activeElement || null;
-
-        finOverlay.hidden = false;
-        finOverlay.removeAttribute('inert');
         finOverlay.classList.add('show');
-
+        finOverlay.setAttribute('aria-hidden','false');
         // Re-render para ajustar gráficas al tamaño visible
         try{ renderFinanceModule(); }catch(e){}
-
-        // Move focus inside dialog
-        try{ btnFinClose?.focus(); }catch(e){}
       }
-
       function closeFin(){
         if(!finOverlay) return;
-
-        // Move focus OUT before hiding
-        try{
-          if(_lastFocusFin && typeof _lastFocusFin.focus === 'function') _lastFocusFin.focus();
-        }catch(e){}
-
         finOverlay.classList.remove('show');
-        finOverlay.setAttribute('inert','');
-        finOverlay.hidden = true;
+        finOverlay.setAttribute('aria-hidden','true');
       }
 
       if(btnFinWin) btnFinWin.addEventListener('click', openFin);
       const btnReservasTop = document.getElementById('btnReservasTop');
-      const reservasOverlay = document.getElementById('reservasOverlay');
-      const reservasBackdrop = document.getElementById('reservasBackdrop');
-      const btnReservasClose = document.getElementById('btnReservasClose');
-      const appRoot = document.getElementById('appRoot');
-
-      let _lastFocusRes = null;
-
-      function setInert(el, on){
-        if(!el) return;
-        try{
-          if(on){
-            el.setAttribute('inert','');
-            el.setAttribute('aria-hidden','true');
-          }else{
-            el.removeAttribute('inert');
-            el.removeAttribute('aria-hidden');
-          }
-        }catch(e){}
-      }
 
       function openReservasWindow(){
-        if(!reservasOverlay) return;
-        _lastFocusRes = document.activeElement || null;
-
-        // Mostrar overlay
-        reservasOverlay.hidden = false;
-        reservasOverlay.removeAttribute('inert');
-        reservasOverlay.classList.add('show');
-
-        // Inert al resto de la app (evita el warning de aria-hidden con foco)
-        // Primero movemos el foco al modal, luego aplicamos inert a la app.
-        const firstFocusable = reservasOverlay.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-        if(firstFocusable) {
-          try{ firstFocusable.focus(); }catch(e){}
-        } else {
-          try{ reservasOverlay.focus?.(); }catch(e){}
-        }
-        setInert(appRoot, true);
-
-        // Cargar UI/datos (si existe la función)
-        try{ initReservasUI?.(); }catch(e){ console.warn('[reservas] initReservasUI error', e); }
+        const ov = document.getElementById('reservasOverlay');
+        if(!ov) return;
+        ov.classList.add('show');
+        ov.setAttribute('aria-hidden','false');
+        // init once + load properties
+        try{ initReservasOnce(); }catch(e){ console.warn(e); }
       }
 
       function closeReservasWindow(){
-        if(!reservasOverlay) return;
-
-        // Quitar inert primero para permitir foco de vuelta
-        setInert(appRoot, false);
-
-        reservasOverlay.classList.remove('show');
-        reservasOverlay.setAttribute('inert','');
-        reservasOverlay.hidden = true;
-
-        try{ (_lastFocusRes || btnReservasTop)?.focus?.(); }catch(e){}
+        const ov = document.getElementById('reservasOverlay');
+        if(!ov) return;
+        ov.classList.remove('show');
+        ov.setAttribute('aria-hidden','true');
       }
 
-      // Eventos
+      if (btnReservasTop) btnReservasTop.addEventListener('click', ()=> { openReservasWindow(); });
+      const btnReservasClose = document.getElementById('btnReservasClose');
+      const btnReservasReload = document.getElementById('btnReservasReload');
+      const reservasOverlay = document.getElementById('reservasOverlay');
+
+      if (btnReservasClose) btnReservasClose.addEventListener('click', closeReservasWindow);
+      if (btnReservasReload) btnReservasReload.addEventListener('click', ()=> { try{ initReservasOnce(); }catch(e){} });
+      if (reservasOverlay) reservasOverlay.addEventListener('click', (e)=>{ if(e.target===reservasOverlay) closeReservasWindow(); });
+      document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeReservasWindow(); });
+
       if(btnFinClose) btnFinClose.addEventListener('click', closeFin);
       if(finOverlay) finOverlay.addEventListener('click', (e)=>{ if(e.target === finOverlay) closeFin(); });
       document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') closeFin(); });
@@ -3335,15 +3435,7 @@ function getFilterSummary(){
       cursor: pointer;
     }
     .btn:hover{ filter: brightness(1.05); }
-
-    /* ===== Modal por CSS (:target) para Reservas ===== */
-    #reservas.modalOverlay{ display:none; position:fixed; inset:0; z-index:9999; }
-    #reservas.modalOverlay:target{ display:block; }
-    #reservas .modalBackdrop{ position:absolute; inset:0; background:rgba(0,0,0,.55); }
-    /* Asegura que el modal quede por encima del backdrop */
-    #reservas .modalWindow{ position:relative; z-index:1; }
-    
-  </style></head><body>
+</style></head><body>
 
   <div class="card">
     <div class="h1">Check Inn — Monitor Financiero (Reporte Ejecutivo)</div>
@@ -3426,15 +3518,8 @@ function getFilterSummary(){
 
 
 
-  
-
-
-
-  
-  </div>
-<!-- ===== Ventana independiente: Reservas ===== -->
-  <div id="reservasOverlay" class="modalOverlay" hidden inert>
-    <button type="button" class="modalBackdrop" id="reservasBackdrop" aria-label="Cerrar"></button>
+  <!-- ===== Ventana independiente: Reservas ===== -->
+  <div id="reservasOverlay" class="modalOverlay" aria-hidden="true">
     <div class="modalWindow" role="dialog" aria-modal="true" aria-label="Reservas">
       <div class="modalHeader">
         <span class="pill">Lodgify</span>
@@ -3442,70 +3527,16 @@ function getFilterSummary(){
         <div class="small" style="color:var(--muted)">Listado y métricas (vía Cloud Run)</div>
         <span class="spacer"></span>
         <button class="iconBtn" id="btnReservasReload" title="Recargar">Actualizar</button>
-        <button type="button" class="iconBtn" id="btnReservasClose" title="Cerrar" aria-label="Cerrar">Cerrar ✕</button>
+        <button class="iconBtn" id="btnReservasClose" title="Cerrar">Cerrar ✕</button>
       </div>
-
       <div class="modalBody">
-        <div id="reservasModule" style="margin-top:0;">
-          <div class="card" style="padding:14px;">
-            <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-              <div class="pill">Reservas (Lodgify)</div>
-              <span class="spacer"></span>
-              <button class="btn" id="btnLoadReservas" title="Cargar reservas">Cargar</button>
-            </div>
-
-                  <div style="display:flex; gap:12px; margin-top:12px; flex-wrap:wrap;">
-        <div style="display:flex; flex-direction:column; gap:6px;">
-          <div class="small" style="color:var(--muted)">Desde</div>
-          <input id="resFrom" type="date" class="input" />
-        </div>
-        <div style="display:flex; flex-direction:column; gap:6px;">
-          <div class="small" style="color:var(--muted)">Hasta</div>
-          <input id="resTo" type="date" class="input" />
-        </div>
-        <div style="display:flex; flex-direction:column; gap:6px; min-width:260px;">
-          <div class="small" style="color:var(--muted)">Alojamiento</div>
-          <select id="resProperty" class="input"></select>
-        </div>
-        <div style="display:flex; flex-direction:column; gap:6px; min-width:220px;">
-          <div class="small" style="color:var(--muted)">Estatus</div>
-          <select id="resStatus" class="input">
-            <option value="">Todos</option>
-            <option value="Booked">Booked</option>
-            <option value="Tentative">Tentative</option>
-            <option value="Declined">Declined</option>
-            <option value="Cancelled">Cancelled</option>
-          </select>
-        </div>
+        <div id="reservasModule" class="" style="margin-top:14px;">
+    <div class="card" style="padding:14px;">
+      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <div class="pill">Reservas (Lodgify)</div>
+        <span class="spacer"></span>
+        <button class="btn" id="btnLoadReservas" title="Cargar reservas">Cargar</button>
       </div>
-
-      <div class="grid" style="margin-top:12px; grid-template-columns: repeat(4, minmax(180px,1fr)); gap:10px;">
-        <div class="kpi"><div class="t">Reservas</div><div class="v" id="kResCount">—</div><div class="s small" id="kResCountDesc">—</div></div>
-        <div class="kpi"><div class="t">Noches</div><div class="v" id="kResNights">—</div><div class="s small" id="kResNightsDesc">—</div></div>
-        <div class="kpi"><div class="t">Ingresos (total)</div><div class="v" id="kResRevenue">—</div><div class="s small" id="kResRevenueDesc">—</div></div>
-        <div class="kpi"><div class="t">ADR</div><div class="v" id="kResADR">—</div><div class="s small" id="kResADRDesc">—</div></div>
-      </div>
-
-      <div class="scroll" style="margin-top:12px; max-height:55vh;">
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Alojamiento</th>
-              <th>Entrada</th>
-              <th>Salida</th>
-              <th>Estatus</th>
-              <th>Canal</th>
-              <th class="num">Total</th>
-            </tr>
-          </thead>
-          <tbody id="tbReservas"></tbody>
-        </table>
-      </div>
-
-      <div class="small" style="margin-top:10px; color:var(--muted)" id="resMsg">Listo. Selecciona filtros y presiona “Cargar”.</div>
-          </div>
-        </div>
       </div>
     </div>
   </div>
@@ -3725,6 +3756,303 @@ function getFilterSummary(){
         return str.replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[m]));
       }
 
+</script>
+
+
+<!-- =========================
+     Reservas (Lodgify) Modal
+     ========================= -->
+<div id="resvOverlay" hidden>
+  <div class="resvBackdrop" data-resv-close="1"></div>
+  <div class="resvWin" role="dialog" aria-modal="true" aria-label="Reservas">
+    <div class="resvHead">
+      <div class="ttl">Reservas (Lodgify) <span class="sub" id="resvStatus">—</span></div>
+      <button class="iconBtn" id="resvBtnReload" title="Actualizar">⟳</button>
+      <button class="iconBtn" id="resvBtnClose" title="Cerrar">✕</button>
+    </div>
+
+    <div class="resvBody">
+      <div class="gridFilters">
+        <label><span>Desde</span><input id="resvFrom" type="date"></label>
+        <label><span>Hasta</span><input id="resvTo" type="date"></label>
+        <label><span>Alojamiento</span><select id="resvProperty"><option value="">Todos</option></select></label>
+        <label><span>Estatus</span>
+          <select id="resvStatusSel">
+            <option value="">Todos</option>
+            <option value="confirmed">Confirmada</option>
+            <option value="cancelled">Cancelada</option>
+          </select>
+        </label>
+        <button id="resvRun" class="actBtn" type="button">Consultar</button>
+      </div>
+
+      <div class="kpis">
+        <div class="kpi"><div class="k">Reservas</div><div class="v" id="resvK1">—</div></div>
+        <div class="kpi"><div class="k">Noches</div><div class="v" id="resvK2">—</div></div>
+        <div class="kpi"><div class="k">Ingresos (total)</div><div class="v" id="resvK3">—</div></div>
+        <div class="kpi"><div class="k">ADR</div><div class="v" id="resvK4">—</div></div>
+      </div>
+
+      <div class="tblWrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th><th>Alojamiento</th><th>Entrada</th><th>Salida</th><th>Estatus</th><th>Canal</th><th>Total</th>
+            </tr>
+          </thead>
+          <tbody id="resvTbody">
+            <tr><td colspan="7" class="muted">Pulsa “Consultar” para traer reservas.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <details>
+        <summary class="muted">Debug (respuesta cruda)</summary>
+        <pre id="resvDebug">—</pre>
+      </details>
+    </div>
+  </div>
+</div>
+
+
+<script>
+(function(){
+  const $ = (id)=>document.getElementById(id);
+
+  function normBase(){
+    const b = (window.API_BASE || "").trim().replace(/\/+$/,"");
+    return b;
+  }
+  function withTs(url){
+    try{
+      const u = new URL(url);
+      u.searchParams.set("_ts", Date.now());
+      return u.toString();
+    }catch{ return url + (url.includes("?")?"&":"?") + "_ts=" + Date.now(); }
+  }
+  function api(path){
+    const base = normBase();
+    return withTs(base + path);
+  }
+
+  function fmtMoney(x){
+    const n = Number(x);
+    if (!isFinite(n)) return "—";
+    try{
+      return n.toLocaleString("es-MX",{style:"currency",currency:"MXN"});
+    }catch{
+      return "$" + n.toFixed(2);
+    }
+  }
+  function setText(id, v){ const el=$(id); if(el) el.textContent = v; }
+  function setHtml(id, v){ const el=$(id); if(el) el.innerHTML = v; }
+
+  // ---------- Modal open/close ----------
+  let lastFocus = null;
+
+  function openReservas(){
+    const overlay = $("resvOverlay");
+    if(!overlay) return;
+
+    lastFocus = document.activeElement;
+    overlay.hidden = false;
+
+    // Set defaults (last 30 days)
+    const to = new Date();
+    const from = new Date(); from.setDate(to.getDate()-30);
+    const f = $("resvFrom"); const t = $("resvTo");
+    if (f && !f.value) f.value = from.toISOString().slice(0,10);
+    if (t && !t.value) t.value = to.toISOString().slice(0,10);
+
+    setText("resvStatus","(abierto)");
+    $("resvBtnClose")?.focus();
+
+    // Load properties once (best effort)
+    loadProperties().catch(()=>{});
+  }
+
+  function closeReservas(){
+    const overlay = $("resvOverlay");
+    if(!overlay) return;
+    overlay.hidden = true;
+    setText("resvStatus","—");
+    if (lastFocus && lastFocus.focus) lastFocus.focus();
+    lastFocus = null;
+  }
+
+  // Expose globally so even if other code breaks, this works
+  window.openReservas = openReservas;
+  window.closeReservas = closeReservas;
+
+  // ---------- Insert/relocate button ----------
+  function ensureButton(){
+    // If already exists, just bind
+    let btn = document.getElementById("btnReservasTop");
+    if(!btn){
+      // Try to place next to existing top buttons
+      const bar = document.querySelector(".appbar") || document.querySelector("header") || document.body;
+      const actions = bar.querySelector(".appActions") || bar;
+      btn = document.createElement("button");
+      btn.id = "btnReservasTop";
+      btn.type = "button";
+      btn.textContent = "Reservas";
+      btn.style.marginLeft = "8px";
+      actions.appendChild(btn);
+      // Make it look like other buttons if possible
+      btn.className = "btnLike";
+    }
+    btn.addEventListener("click", (e)=>{ e.preventDefault(); openReservas(); });
+  }
+
+  // ---------- Data loading ----------
+  function pickArray(data){
+    if(Array.isArray(data)) return data;
+    if(data && Array.isArray(data.items)) return data.items;
+    if(data && Array.isArray(data.data)) return data.data;
+    if(data && Array.isArray(data.bookings)) return data.bookings;
+    return [];
+  }
+
+  async function safeFetchJson(url){
+    const r = await fetch(url, { cache:"no-store", headers: { "Cache-Control":"no-cache" } });
+    const text = await r.text();
+    let json = null;
+    try{ json = JSON.parse(text); }catch{ json = { raw:text }; }
+    return { ok:r.ok, status:r.status, json, text };
+  }
+
+  async function loadProperties(){
+    const sel = $("resvProperty");
+    if(!sel) return;
+    setText("resvStatus","Cargando alojamientos…");
+    const {ok,status,json,text} = await safeFetchJson(api("/api/lodgify/properties"));
+    $("resvDebug").textContent = text || JSON.stringify(json,null,2);
+
+    if(!ok){
+      setText("resvStatus", `Error properties (${status})`);
+      return;
+    }
+    const arr = pickArray(json);
+    // clear + keep "Todos"
+    sel.innerHTML = '<option value="">Todos</option>';
+    for(const p of arr){
+      const id = p.id ?? p.propertyId ?? p.uid ?? p.property_id;
+      const name = p.name ?? p.propertyName ?? p.title ?? p.internalName ?? (`Propiedad ${id}`);
+      if(!id) continue;
+      const opt = document.createElement("option");
+      opt.value = String(id);
+      opt.textContent = String(name);
+      sel.appendChild(opt);
+    }
+    setText("resvStatus", `Alojamientos: ${arr.length}`);
+  }
+
+  function parseBooking(b){
+    const id = b.id ?? b.bookingId ?? b.reservationId ?? b.uid ?? "—";
+    const propName =
+      b.propertyName ??
+      b.property?.name ??
+      b.property?.title ??
+      b.unitName ??
+      b.accommodationName ??
+      b.roomTypeName ??
+      "—";
+    const checkIn = b.checkIn ?? b.arrival ?? b.startDate ?? b.checkin ?? "—";
+    const checkOut = b.checkOut ?? b.departure ?? b.endDate ?? b.checkout ?? "—";
+    const status = b.status ?? b.state ?? "—";
+    const channel = b.channel ?? b.source ?? b.origin ?? b.partner ?? "—";
+    const total = Number(b.total ?? b.amount ?? b.price ?? b.totalPrice ?? b.totalAmount ?? 0);
+    return { id, propName, checkIn, checkOut, status, channel, total };
+  }
+
+  function nightsBetween(a,b){
+    try{
+      const d1 = new Date(a); const d2 = new Date(b);
+      const n = Math.round((d2-d1)/(1000*60*60*24));
+      return isFinite(n) && n>0 ? n : 0;
+    }catch{ return 0; }
+  }
+
+  async function runBookings(){
+    const from = $("resvFrom")?.value || "";
+    const to = $("resvTo")?.value || "";
+    const prop = $("resvProperty")?.value || "";
+    const st = $("resvStatusSel")?.value || "";
+
+    setText("resvStatus","Consultando reservas…");
+    setHtml("resvTbody", '<tr><td colspan="7" class="muted">Cargando…</td></tr>');
+
+    const qs = new URLSearchParams();
+    // backend passes query through; keep generic names the Lodgify API might accept
+    if(from) qs.set("from", from);
+    if(to) qs.set("to", to);
+    if(prop) qs.set("propertyId", prop);
+    if(st) qs.set("status", st);
+
+    const url = api("/api/lodgify/bookings") + (qs.toString() ? ("&"+qs.toString()) : "");
+    const {ok,status,json,text} = await safeFetchJson(url);
+    $("resvDebug").textContent = text || JSON.stringify(json,null,2);
+
+    if(!ok){
+      setText("resvStatus", `Error bookings (${status})`);
+      setHtml("resvTbody", `<tr><td colspan="7" class="muted">Error al consultar (${status}). Revisa Debug.</td></tr>`);
+      return;
+    }
+    const arr = pickArray(json);
+    if(arr.length===0){
+      setText("resvStatus","Sin resultados");
+      setHtml("resvTbody", `<tr><td colspan="7" class="muted">Sin resultados.</td></tr>`);
+      setText("resvK1","0"); setText("resvK2","0"); setText("resvK3",fmtMoney(0)); setText("resvK4",fmtMoney(0));
+      return;
+    }
+
+    let nights=0, total=0;
+    const rows = arr.map(b=>{
+      const x = parseBooking(b);
+      nights += nightsBetween(x.checkIn, x.checkOut);
+      total += isFinite(x.total)? x.total : 0;
+      return `<tr>
+        <td>${x.id}</td>
+        <td>${x.propName}</td>
+        <td>${x.checkIn}</td>
+        <td>${x.checkOut}</td>
+        <td>${x.status}</td>
+        <td>${x.channel}</td>
+        <td>${fmtMoney(x.total)}</td>
+      </tr>`;
+    }).join("");
+
+    setHtml("resvTbody", rows);
+    setText("resvK1", String(arr.length));
+    setText("resvK2", String(nights));
+    setText("resvK3", fmtMoney(total));
+    setText("resvK4", fmtMoney(nights ? total/nights : 0));
+    setText("resvStatus", `OK (${arr.length})`);
+  }
+
+  // ---------- Wiring ----------
+  document.addEventListener("DOMContentLoaded", ()=>{
+    ensureButton();
+
+    $("resvBtnClose")?.addEventListener("click", closeReservas);
+    $("resvBtnReload")?.addEventListener("click", ()=>loadProperties().catch(()=>{}));
+    $("resvRun")?.addEventListener("click", ()=>runBookings().catch(err=>{
+      console.error(err);
+      setText("resvStatus","Error");
+      setHtml("resvTbody", '<tr><td colspan="7" class="muted">Error inesperado (ver consola).</td></tr>');
+    }));
+
+    document.addEventListener("keydown",(e)=>{
+      if(e.key==="Escape" && !$("resvOverlay")?.hidden){ closeReservas(); }
+    });
+
+    $("resvOverlay")?.addEventListener("click",(e)=>{
+      if(e.target && e.target.getAttribute && e.target.getAttribute("data-resv-close")==="1"){
+        closeReservas();
+      }
+    });
+  });
+})();
 </script>
 
 </body>
