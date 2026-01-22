@@ -3626,7 +3626,7 @@ function getFilterSummary(){
           const sel = document.getElementById('resProperty');
           if (sel){
             sel.innerHTML = '<option value="">Todos</option>';
-            const r = await fetch(addNoCache(`${API_BASE}/api/lodgify/properties`), { cache: 'no-store', headers: { 'Cache-Control': 'no-cache' } });
+            const r = await fetch(addNoCache(`${API_BASE}/api/lodgify/properties`), { cache: 'no-store'});
             if(!r.ok) throw new Error(`properties ${r.status}`);
             const data = await r.json();
             const items = Array.isArray(data?.items) ? data.items : (Array.isArray(data) ? data : []);
@@ -3684,7 +3684,7 @@ function getFilterSummary(){
 
         try{
           const url = `${API_BASE}/api/lodgify/bookings?`+qs.toString();
-          const r = await fetch(addNoCache(url), { cache: 'no-store', headers: { 'Cache-Control': 'no-cache' } });
+          const r = await fetch(addNoCache(url), { cache: 'no-store'});
           if(!r.ok){
             const t = await r.text().catch(()=> '');
             throw new Error(`bookings ${r.status}: ${t.slice(0,200)}`);
@@ -3914,7 +3914,7 @@ function getFilterSummary(){
   }
 
   async function safeFetchJson(url){
-    const r = await fetch(url, { cache:"no-store", headers: { "Cache-Control":"no-cache" } });
+    const r = await fetch(url, { cache:"no-store"});
     const text = await r.text();
     let json = null;
     try{ json = JSON.parse(text); }catch{ json = { raw:text }; }
