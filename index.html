@@ -417,7 +417,7 @@
     .finWindow .panel.finModule{margin:0;border-radius:16px; background: rgba(10,15,25,0.98);}
     .finHeader{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
     .finHeaderRight{display:flex;align-items:center;gap:10px;}
-    .iconBtn{appearance:none;border:1px solid rgba(255,255,255,.16);background:rgba(0,0,0,.18);color:rgba(255,255,255,.9);
+    .iconBtn, a.iconBtn{appearance:none;border:1px solid rgba(255,255,255,.16);background:rgba(0,0,0,.18);color:rgba(255,255,255,.9);
       width:34px;height:34px;border-radius:10px;cursor:pointer;display:grid;place-items:center;}
     .iconBtn:hover{background:rgba(0,0,0,.28);}
 
@@ -464,9 +464,18 @@
     }
     .btn:hover{ filter: brightness(1.05); }
 \n  /* ===== Ventana independiente: Reservas ===== */\n  .modalOverlay{position:fixed; inset:0; background:rgba(2,6,23,.65); backdrop-filter: blur(6px); display:none; align-items:center; justify-content:center; z-index:9999;}\n  .modalOverlay.show{display:flex;}\n  .modalWindow{width:min(1180px, calc(100vw - 28px)); height:min(86vh, 860px); background:linear-gradient(180deg, rgba(15,23,42,.95), rgba(2,6,23,.95)); border:1px solid rgba(148,163,184,.22); border-radius:16px; box-shadow:0 25px 60px rgba(0,0,0,.45); overflow:hidden; display:flex; flex-direction:column;}\n  .modalHeader{display:flex; align-items:center; gap:10px; padding:12px 14px; border-bottom:1px solid rgba(148,163,184,.14);} \n  .modalTitle{font-weight:800; letter-spacing:.2px;}\n  .modalHeader .spacer{flex:1;}\n  .iconBtn{border:1px solid rgba(148,163,184,.18); background:rgba(2,6,23,.35); color:var(--txt); border-radius:10px; padding:8px 10px; cursor:pointer;}\n  .iconBtn:hover{filter:brightness(1.06);} \n  .modalBody{padding:14px; overflow:auto;}\n  .modalBody .card{background:rgba(2,6,23,.28);}\n
-</style>
+
+    /* ===== Modal por CSS (:target) para Reservas ===== */
+    #reservas.modalOverlay{ display:none; position:fixed; inset:0; z-index:9999; }
+    #reservas.modalOverlay:target{ display:block; }
+    #reservas .modalBackdrop{ position:absolute; inset:0; background:rgba(0,0,0,.55); }
+    /* Asegura que el modal quede por encima del backdrop */
+    #reservas .modalWindow{ position:relative; z-index:1; }
+    
+  </style>
 </head>
 <body>
+  <div id="appRoot">
 
   <!-- CSS toggle for drawer -->
   <input type="checkbox" id="navToggle" />
@@ -477,7 +486,7 @@
     <button class="primary" id="btnRefreshTop" title="Actualizar datos">Actualizar</button>
     <button id="btnPDF" title="Descargar reporte PDF">PDF</button>
     <button id="btnFinWin" title="Indicadores financieros">Indicadores</button>
-    <button id="btnReservasTop" title="Reservas (Lodgify)">Reservas</button>
+    <button id="btnReservasTop" class="btnLink" type="button" title="Reservas (Lodgify)">Reservas</button>
   </div>
 
   <!-- Overlay closes drawer when clicked -->
@@ -640,61 +649,8 @@
         <div class="panel">
           <div class="section-title" id="mainTableTitle">Egresos (Presupuesto vs Real)</div>
           <div class="small" id="mainTableSub">Real y presupuesto en positivo (valor absoluto).</div>
-      <div style="display:flex; gap:12px; margin-top:12px; flex-wrap:wrap;">
-        <div style="display:flex; flex-direction:column; gap:6px;">
-          <div class="small" style="color:var(--muted)">Desde</div>
-          <input id="resFrom" type="date" class="input" />
-        </div>
-        <div style="display:flex; flex-direction:column; gap:6px;">
-          <div class="small" style="color:var(--muted)">Hasta</div>
-          <input id="resTo" type="date" class="input" />
-        </div>
-        <div style="display:flex; flex-direction:column; gap:6px; min-width:260px;">
-          <div class="small" style="color:var(--muted)">Alojamiento</div>
-          <select id="resProperty" class="input"></select>
-        </div>
-        <div style="display:flex; flex-direction:column; gap:6px; min-width:220px;">
-          <div class="small" style="color:var(--muted)">Estatus</div>
-          <select id="resStatus" class="input">
-            <option value="">Todos</option>
-            <option value="Booked">Booked</option>
-            <option value="Tentative">Tentative</option>
-            <option value="Declined">Declined</option>
-            <option value="Cancelled">Cancelled</option>
-          </select>
-        </div>
-      </div>
 
-      <div class="grid" style="margin-top:12px; grid-template-columns: repeat(4, minmax(180px,1fr)); gap:10px;">
-        <div class="kpi"><div class="t">Reservas</div><div class="v" id="kResCount">—</div><div class="s small" id="kResCountDesc">—</div></div>
-        <div class="kpi"><div class="t">Noches</div><div class="v" id="kResNights">—</div><div class="s small" id="kResNightsDesc">—</div></div>
-        <div class="kpi"><div class="t">Ingresos (total)</div><div class="v" id="kResRevenue">—</div><div class="s small" id="kResRevenueDesc">—</div></div>
-        <div class="kpi"><div class="t">ADR</div><div class="v" id="kResADR">—</div><div class="s small" id="kResADRDesc">—</div></div>
-      </div>
-
-      <div class="scroll" style="margin-top:12px; max-height:55vh;">
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Alojamiento</th>
-              <th>Entrada</th>
-              <th>Salida</th>
-              <th>Estatus</th>
-              <th>Canal</th>
-              <th class="num">Total</th>
-            </tr>
-          </thead>
-          <tbody id="tbReservas"></tbody>
-        </table>
-      </div>
-
-      <div class="small" style="margin-top:10px; color:var(--muted)" id="resMsg">Tip: si no cargan, revisa que tu backend tenga LODGIFY_API_KEY y que /api/lodgify/* responda 200.</div>
-    </div>
-  </div>
-
-        
-<div id="financeTableWrap">
+          <div id="financeTableWrap">
           <div class="scroll" style="margin-top:10px;">
             <table>
               <thead><tr id="theadRow"></tr></thead>
@@ -754,7 +710,7 @@
 
 
   <!-- Ventana independiente: Indicadores financieros -->
-  <div class="finOverlay" id="finOverlay" aria-hidden="true">
+  <div class="finOverlay" id="finOverlay" inert hidden>
     <div class="finWindow" role="dialog" aria-label="Indicadores financieros">
       <div class="panel finModule" id="finModule">
   <div class="finHeader">
@@ -2422,48 +2378,95 @@ function render(){
       const finOverlay = document.getElementById('finOverlay');
       const btnFinClose = document.getElementById('btnFinClose');
 
+      let _lastFocusFin = null;
+
       function openFin(){
         if(!finOverlay) return;
+        _lastFocusFin = document.activeElement || null;
+
+        finOverlay.hidden = false;
+        finOverlay.removeAttribute('inert');
         finOverlay.classList.add('show');
-        finOverlay.setAttribute('aria-hidden','false');
+
         // Re-render para ajustar gráficas al tamaño visible
         try{ renderFinanceModule(); }catch(e){}
+
+        // Move focus inside dialog
+        try{ btnFinClose?.focus(); }catch(e){}
       }
+
       function closeFin(){
         if(!finOverlay) return;
+
+        // Move focus OUT before hiding
+        try{
+          if(_lastFocusFin && typeof _lastFocusFin.focus === 'function') _lastFocusFin.focus();
+        }catch(e){}
+
         finOverlay.classList.remove('show');
-        finOverlay.setAttribute('aria-hidden','true');
+        finOverlay.setAttribute('inert','');
+        finOverlay.hidden = true;
       }
 
       if(btnFinWin) btnFinWin.addEventListener('click', openFin);
       const btnReservasTop = document.getElementById('btnReservasTop');
+      const reservasOverlay = document.getElementById('reservasOverlay');
+      const reservasBackdrop = document.getElementById('reservasBackdrop');
+      const btnReservasClose = document.getElementById('btnReservasClose');
+      const appRoot = document.getElementById('appRoot');
+
+      let _lastFocusRes = null;
+
+      function setInert(el, on){
+        if(!el) return;
+        try{
+          if(on){
+            el.setAttribute('inert','');
+            el.setAttribute('aria-hidden','true');
+          }else{
+            el.removeAttribute('inert');
+            el.removeAttribute('aria-hidden');
+          }
+        }catch(e){}
+      }
 
       function openReservasWindow(){
-        const ov = document.getElementById('reservasOverlay');
-        if(!ov) return;
-        ov.classList.add('show');
-        ov.setAttribute('aria-hidden','false');
-        // init once + load properties
-        try{ initReservasOnce(); }catch(e){ console.warn(e); }
+        if(!reservasOverlay) return;
+        _lastFocusRes = document.activeElement || null;
+
+        // Mostrar overlay
+        reservasOverlay.hidden = false;
+        reservasOverlay.removeAttribute('inert');
+        reservasOverlay.classList.add('show');
+
+        // Inert al resto de la app (evita el warning de aria-hidden con foco)
+        // Primero movemos el foco al modal, luego aplicamos inert a la app.
+        const firstFocusable = reservasOverlay.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        if(firstFocusable) {
+          try{ firstFocusable.focus(); }catch(e){}
+        } else {
+          try{ reservasOverlay.focus?.(); }catch(e){}
+        }
+        setInert(appRoot, true);
+
+        // Cargar UI/datos (si existe la función)
+        try{ initReservasUI?.(); }catch(e){ console.warn('[reservas] initReservasUI error', e); }
       }
 
       function closeReservasWindow(){
-        const ov = document.getElementById('reservasOverlay');
-        if(!ov) return;
-        ov.classList.remove('show');
-        ov.setAttribute('aria-hidden','true');
+        if(!reservasOverlay) return;
+
+        // Quitar inert primero para permitir foco de vuelta
+        setInert(appRoot, false);
+
+        reservasOverlay.classList.remove('show');
+        reservasOverlay.setAttribute('inert','');
+        reservasOverlay.hidden = true;
+
+        try{ (_lastFocusRes || btnReservasTop)?.focus?.(); }catch(e){}
       }
 
-      if (btnReservasTop) btnReservasTop.addEventListener('click', ()=> { openReservasWindow(); });
-      const btnReservasClose = document.getElementById('btnReservasClose');
-      const btnReservasReload = document.getElementById('btnReservasReload');
-      const reservasOverlay = document.getElementById('reservasOverlay');
-
-      if (btnReservasClose) btnReservasClose.addEventListener('click', closeReservasWindow);
-      if (btnReservasReload) btnReservasReload.addEventListener('click', ()=> { try{ initReservasOnce(); }catch(e){} });
-      if (reservasOverlay) reservasOverlay.addEventListener('click', (e)=>{ if(e.target===reservasOverlay) closeReservasWindow(); });
-      document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeReservasWindow(); });
-
+      // Eventos
       if(btnFinClose) btnFinClose.addEventListener('click', closeFin);
       if(finOverlay) finOverlay.addEventListener('click', (e)=>{ if(e.target === finOverlay) closeFin(); });
       document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') closeFin(); });
@@ -3332,7 +3335,15 @@ function getFilterSummary(){
       cursor: pointer;
     }
     .btn:hover{ filter: brightness(1.05); }
-</style></head><body>
+
+    /* ===== Modal por CSS (:target) para Reservas ===== */
+    #reservas.modalOverlay{ display:none; position:fixed; inset:0; z-index:9999; }
+    #reservas.modalOverlay:target{ display:block; }
+    #reservas .modalBackdrop{ position:absolute; inset:0; background:rgba(0,0,0,.55); }
+    /* Asegura que el modal quede por encima del backdrop */
+    #reservas .modalWindow{ position:relative; z-index:1; }
+    
+  </style></head><body>
 
   <div class="card">
     <div class="h1">Check Inn — Monitor Financiero (Reporte Ejecutivo)</div>
@@ -3415,8 +3426,15 @@ function getFilterSummary(){
 
 
 
-  <!-- ===== Ventana independiente: Reservas ===== -->
-  <div id="reservasOverlay" class="modalOverlay" aria-hidden="true">
+  
+
+
+
+  
+  </div>
+<!-- ===== Ventana independiente: Reservas ===== -->
+  <div id="reservasOverlay" class="modalOverlay" hidden inert>
+    <button type="button" class="modalBackdrop" id="reservasBackdrop" aria-label="Cerrar"></button>
     <div class="modalWindow" role="dialog" aria-modal="true" aria-label="Reservas">
       <div class="modalHeader">
         <span class="pill">Lodgify</span>
@@ -3424,16 +3442,70 @@ function getFilterSummary(){
         <div class="small" style="color:var(--muted)">Listado y métricas (vía Cloud Run)</div>
         <span class="spacer"></span>
         <button class="iconBtn" id="btnReservasReload" title="Recargar">Actualizar</button>
-        <button class="iconBtn" id="btnReservasClose" title="Cerrar">Cerrar ✕</button>
+        <button type="button" class="iconBtn" id="btnReservasClose" title="Cerrar" aria-label="Cerrar">Cerrar ✕</button>
       </div>
+
       <div class="modalBody">
-        <div id="reservasModule" class="" style="margin-top:14px;">
-    <div class="card" style="padding:14px;">
-      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-        <div class="pill">Reservas (Lodgify)</div>
-        <span class="spacer"></span>
-        <button class="btn" id="btnLoadReservas" title="Cargar reservas">Cargar</button>
+        <div id="reservasModule" style="margin-top:0;">
+          <div class="card" style="padding:14px;">
+            <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+              <div class="pill">Reservas (Lodgify)</div>
+              <span class="spacer"></span>
+              <button class="btn" id="btnLoadReservas" title="Cargar reservas">Cargar</button>
+            </div>
+
+                  <div style="display:flex; gap:12px; margin-top:12px; flex-wrap:wrap;">
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          <div class="small" style="color:var(--muted)">Desde</div>
+          <input id="resFrom" type="date" class="input" />
+        </div>
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          <div class="small" style="color:var(--muted)">Hasta</div>
+          <input id="resTo" type="date" class="input" />
+        </div>
+        <div style="display:flex; flex-direction:column; gap:6px; min-width:260px;">
+          <div class="small" style="color:var(--muted)">Alojamiento</div>
+          <select id="resProperty" class="input"></select>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:6px; min-width:220px;">
+          <div class="small" style="color:var(--muted)">Estatus</div>
+          <select id="resStatus" class="input">
+            <option value="">Todos</option>
+            <option value="Booked">Booked</option>
+            <option value="Tentative">Tentative</option>
+            <option value="Declined">Declined</option>
+            <option value="Cancelled">Cancelled</option>
+          </select>
+        </div>
       </div>
+
+      <div class="grid" style="margin-top:12px; grid-template-columns: repeat(4, minmax(180px,1fr)); gap:10px;">
+        <div class="kpi"><div class="t">Reservas</div><div class="v" id="kResCount">—</div><div class="s small" id="kResCountDesc">—</div></div>
+        <div class="kpi"><div class="t">Noches</div><div class="v" id="kResNights">—</div><div class="s small" id="kResNightsDesc">—</div></div>
+        <div class="kpi"><div class="t">Ingresos (total)</div><div class="v" id="kResRevenue">—</div><div class="s small" id="kResRevenueDesc">—</div></div>
+        <div class="kpi"><div class="t">ADR</div><div class="v" id="kResADR">—</div><div class="s small" id="kResADRDesc">—</div></div>
+      </div>
+
+      <div class="scroll" style="margin-top:12px; max-height:55vh;">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Alojamiento</th>
+              <th>Entrada</th>
+              <th>Salida</th>
+              <th>Estatus</th>
+              <th>Canal</th>
+              <th class="num">Total</th>
+            </tr>
+          </thead>
+          <tbody id="tbReservas"></tbody>
+        </table>
+      </div>
+
+      <div class="small" style="margin-top:10px; color:var(--muted)" id="resMsg">Listo. Selecciona filtros y presiona “Cargar”.</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
