@@ -10,21 +10,42 @@ const allowedOrigins = (process.env.ALLOWED_ORIGINS || "")
   .map((s) => s.trim())
   .filter(Boolean);
 
-app.use(
-  cors({
-    origin: (origin, cb) => {
-      // Allow server-to-server, curl, Postman
-      if (!origin) return cb(null, true);
+// Activa esto si quieres permitir abrir el HTML desde Finder (Origin: null)
+const ALLOW_NULL_ORIGIN = (process.env.ALLOW_NULL_ORIGIN || "true").toLowerCase() === "true";
 
-      // If not set, allow all (dev only)
-      if (allowedOrigins.length === 0) return cb(null, true);
+const corsOptions = {
+  origin: (origin, cb) => {
+    // Server-to-server, curl, Postman (sin Origin)
+    if (!origin) return cb(null, true);
 
-      if (allowedOrigins.includes(origin)) return cb(null, true);
+    // ✅ Permitir file:// (Finder) -> Origin: "null"
+    if (ALLOW_NULL_ORIGIN && origin === "null") return cb(null, true);
 
-      return cb(new Error(`CORS blocked for origin: ${origin}`));
-    },
-  })
-);
+    // Si no configuras ALLOWED_ORIGINS, permite todo (dev only)
+    if (allowedOrigins.length === 0) return cb(null, true);
+
+    if (allowedOrigins.includes(origin)) return cb(null, true);
+
+    // ❗ NO lances Error (eso te da 500). Rechaza limpio.
+    return cb(null, false);
+  },
+  methods: ["GET", "POST", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Accept", "Authorization"],
+  credentials: false,
+};
+
+app.use(cors(corsOptions));
+
+// ✅ Preflight SIEMPRE
+app.options("*", cors(corsOptions));
+
+// Si CORS rechazó, Express no manda respuesta; respondemos claro.
+app.use((req, res, next) => {
+  // Si llegó hasta aquí en un preflight OPTIONS, responde 204
+  if (req.method === "OPTIONS") return res.sendStatus(204);
+  next();
+});
+
 
 // (Opcional pero útil) JSON bodies
 app.use(express.json());
