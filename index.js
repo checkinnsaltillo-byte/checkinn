@@ -10,15 +10,22 @@ const allowedOrigins = (process.env.ALLOWED_ORIGINS || "")
   .map((s) => s.trim())
   .filter(Boolean);
 
-// Activa esto si quieres permitir abrir el HTML desde Finder (Origin: null)
-const ALLOW_NULL_ORIGIN = (process.env.ALLOW_NULL_ORIGIN || "true").toLowerCase() === "true";
+// ---------- CORS ----------
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+// Permite file:// (Origin: "null") si lo habilitas (útil en pruebas abriendo el HTML desde Finder)
+const ALLOW_NULL_ORIGIN =
+  (process.env.ALLOW_NULL_ORIGIN || "true").toLowerCase() === "true";
 
 const corsOptions = {
   origin: (origin, cb) => {
-    // Server-to-server, curl, Postman (sin Origin)
+    // Server-to-server, curl, Postman (sin header Origin)
     if (!origin) return cb(null, true);
 
-    // ✅ Permitir file:// (Finder) -> Origin: "null"
+    // file:// -> Origin: "null"
     if (ALLOW_NULL_ORIGIN && origin === "null") return cb(null, true);
 
     // Si no configuras ALLOWED_ORIGINS, permite todo (dev only)
@@ -26,26 +33,18 @@ const corsOptions = {
 
     if (allowedOrigins.includes(origin)) return cb(null, true);
 
-    // ❗ NO lances Error (eso te da 500). Rechaza limpio.
+    // Importante: NO arrojar Error (eso causa 500). Rechaza limpio.
     return cb(null, false);
   },
   methods: ["GET", "POST", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Accept", "Authorization"],
+  allowedHeaders: ["Content-Type", "Accept", "Authorization", "Cache-Control", "Pragma"],
   credentials: false,
+  optionsSuccessStatus: 204,
 };
 
 app.use(cors(corsOptions));
-
-// ✅ Preflight SIEMPRE
+// Preflight para cualquier ruta
 app.options("*", cors(corsOptions));
-
-// Si CORS rechazó, Express no manda respuesta; respondemos claro.
-app.use((req, res, next) => {
-  // Si llegó hasta aquí en un preflight OPTIONS, responde 204
-  if (req.method === "OPTIONS") return res.sendStatus(204);
-  next();
-});
-
 
 // (Opcional pero útil) JSON bodies
 app.use(express.json());
