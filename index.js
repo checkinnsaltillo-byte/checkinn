@@ -186,13 +186,68 @@ app.get("/api/lodgify/properties", async (req, res) => {
 // GET https://api.lodgify.com/v2/reservations/bookings
 app.get("/api/lodgify/bookings", async (req, res) => {
   if (!requireLodgifyKey(res)) return;
+
   try {
-    await lodgifyGet("/v2/reservations/bookings", req.query, res);
+    // parámetros base
+    const from = req.query.from;
+    const to = req.query.to;
+
+    // tamaño por página (200 suele ser buen balance)
+    const size = Number(req.query.size || 200);
+
+    // si el cliente manda page, le respetas; si no, traes todo
+    const clientPage = req.query.page ? Number(req.query.page) : null;
+
+    // headers anti-cache
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
+
+    // si el cliente pidió una sola página, solo proxy normal
+    if (clientPage) {
+      return await lodgifyGet("/v2/reservations/bookings", { ...req.query, page: clientPage, size }, res);
+    }
+
+    // si NO pidió page, traemos todas las páginas y devolvemos un solo JSON agregado
+    let page = 1;
+    let all = [];
+    while (true) {
+      const url = new URL(LODGIFY_API_BASE + "/v2/reservations/bookings");
+      if (from) url.searchParams.set("from", from);
+      if (to) url.searchParams.set("to", to);
+      url.searchParams.set("page", String(page));
+      url.searchParams.set("size", String(size));
+
+      const r = await fetchWithTimeout(url.toString(), {
+        headers: { "X-ApiKey": LODGIFY_API_KEY, "Accept": "application/json" },
+      }, LODGIFY_TIMEOUT_MS);
+
+      const txt = await r.text();
+      if (!r.ok) {
+        return res.status(r.status).type("text/plain").send(txt);
+      }
+
+      const data = JSON.parse(txt);
+      const items = Array.isArray(data.items) ? data.items : [];
+      all.push(...items);
+
+      // corte
+      if (items.length === 0) break;
+      if (items.length < size) break;
+
+      page += 1;
+
+      // safety brake (evitar loops infinitos si algo raro pasa)
+      if (page > 2000) break;
+    }
+
+    return res.json({ ok: true, items: all, total: all.length });
   } catch (e) {
     console.error(e);
     res.status(500).json({ ok: false, error: "lodgify_bookings_failed", message: e.message });
   }
 });
+
 
 // ✅ Error handler (incluye errores de CORS)
 app.use((err, req, res, next) => {
