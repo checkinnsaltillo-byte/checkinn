@@ -10,12 +10,6 @@ const allowedOrigins = (process.env.ALLOWED_ORIGINS || "")
   .map((s) => s.trim())
   .filter(Boolean);
 
-// ---------- CORS ----------
-const allowedOrigins = (process.env.ALLOWED_ORIGINS || "")
-  .split(",")
-  .map((s) => s.trim())
-  .filter(Boolean);
-
 // Permite file:// (Origin: "null") si lo habilitas (útil en pruebas abriendo el HTML desde Finder)
 const ALLOW_NULL_ORIGIN =
   (process.env.ALLOW_NULL_ORIGIN || "true").toLowerCase() === "true";
@@ -33,7 +27,7 @@ const corsOptions = {
 
     if (allowedOrigins.includes(origin)) return cb(null, true);
 
-    // Importante: NO arrojar Error (eso causa 500). Rechaza limpio.
+    // Rechaza limpio, sin lanzar error
     return cb(null, false);
   },
   methods: ["GET", "POST", "OPTIONS"],
@@ -43,10 +37,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-// Preflight para cualquier ruta
 app.options("*", cors(corsOptions));
-
-// (Opcional pero útil) JSON bodies
 app.use(express.json());
 
 // Health
@@ -81,9 +72,10 @@ app.get("/api/data", async (req, res) => {
 // ---------- LODGIFY PROXY ----------
 const LODGIFY_API_BASE = "https://api.lodgify.com";
 const LODGIFY_API_KEY = process.env.LODGIFY_API_KEY || "";
+const LODGIFY_TIMEOUT_MS = Number(process.env.LODGIFY_TIMEOUT_MS || 20000);
 
-// Timeout configurable
-const LODGIFY_TIMEOUT_MS = Number(process.env.LODGIFY_TIMEOUT_MS || 15000);
+// Algunas APIs se portan mejor con User-Agent explícito
+const USER_AGENT = process.env.USER_AGENT || "checkinn-proxy/1.0";
 
 function requireLodgifyKey(res) {
   if (!LODGIFY_API_KEY) {
@@ -98,22 +90,20 @@ function requireLodgifyKey(res) {
   return true;
 }
 
-// Helper: fetch con timeout + abort
+// fetch con timeout + abort
 async function fetchWithTimeout(url, options = {}, timeoutMs = 15000) {
   const controller = new AbortController();
   const t = setTimeout(() => controller.abort(), timeoutMs);
-
   try {
-    const r = await fetch(url, { ...options, signal: controller.signal });
-    return r;
+    return await fetch(url, { ...options, signal: controller.signal });
   } finally {
     clearTimeout(t);
   }
 }
 
+// Helper básico: proxy directo
 async function lodgifyGet(path, query, res) {
   const url = new URL(LODGIFY_API_BASE + path);
-
   for (const [k, v] of Object.entries(query || {})) {
     if (v !== undefined && v !== null && String(v).length > 0) {
       url.searchParams.set(k, String(v));
@@ -135,9 +125,9 @@ async function lodgifyGet(path, query, res) {
       target,
       {
         headers: {
-          // Lodgify: header correcto es X-ApiKey :contentReference[oaicite:1]{index=1}
           "X-ApiKey": LODGIFY_API_KEY,
           "Accept": "application/json",
+          "User-Agent": USER_AGENT,
         },
       },
       LODGIFY_TIMEOUT_MS
@@ -146,8 +136,6 @@ async function lodgifyGet(path, query, res) {
     const ms = Date.now() - started;
     const isAbort = e?.name === "AbortError";
     console.error(`[lodgify] FAILED ${path} in ${ms}ms`, e);
-
-    // 🔥 Esto evita "pending" en el navegador: siempre responde
     return res.status(504).json({
       ok: false,
       error: isAbort ? "lodgify_timeout" : "lodgify_fetch_failed",
@@ -164,7 +152,6 @@ async function lodgifyGet(path, query, res) {
   const text = await r.text();
   res.status(r.status);
 
-  // Si Lodgify regresa HTML o texto (errores), lo pasamos tal cual.
   try {
     res.json(JSON.parse(text));
   } catch {
@@ -172,7 +159,7 @@ async function lodgifyGet(path, query, res) {
   }
 }
 
-// GET https://api.lodgify.com/v2/properties
+// ---------- PROPERTIES ----------
 app.get("/api/lodgify/properties", async (req, res) => {
   if (!requireLodgifyKey(res)) return;
   try {
@@ -183,34 +170,54 @@ app.get("/api/lodgify/properties", async (req, res) => {
   }
 });
 
-// GET https://api.lodgify.com/v2/reservations/bookings
+// ---------- BOOKINGS (PAGINACIÓN ROBUSTA) ----------
+/**
+ * Objetivo:
+ * - Si el cliente manda `page` => proxy de 1 sola página (debug / UI paginada server-side)
+ * - Si el cliente NO manda `page` => agregamos todas las páginas (ideal para dashboards)
+ *
+ * Importante:
+ * - Lodgify a veces usa page/size, pero en algunos endpoints usan offset/limit.
+ * - Aquí implementamos:
+ *   A) intentar con page/size
+ *   B) si detectamos que no avanza (misma respuesta), probamos offset/limit
+ */
 app.get("/api/lodgify/bookings", async (req, res) => {
   if (!requireLodgifyKey(res)) return;
 
   try {
-    // parámetros base
     const from = req.query.from;
     const to = req.query.to;
 
-    // tamaño por página (200 suele ser buen balance)
-    const size = Number(req.query.size || 200);
-
-    // si el cliente manda page, le respetas; si no, traes todo
+    // Controles
+    const size = Math.min(500, Math.max(1, Number(req.query.size || 200)));
     const clientPage = req.query.page ? Number(req.query.page) : null;
 
-    // headers anti-cache
+    // anti-cache
     res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
     res.setHeader("Pragma", "no-cache");
     res.setHeader("Expires", "0");
 
-    // si el cliente pidió una sola página, solo proxy normal
+    // 1) Si piden una página específica: proxy normal
     if (clientPage) {
       return await lodgifyGet("/v2/reservations/bookings", { ...req.query, page: clientPage, size }, res);
     }
 
-    // si NO pidió page, traemos todas las páginas y devolvemos un solo JSON agregado
+    // 2) Si no piden page: agregamos TODO
+    const headers = {
+      "X-ApiKey": LODGIFY_API_KEY,
+      "Accept": "application/json",
+      "User-Agent": USER_AGENT,
+    };
+
+    // ----- A) Intento 1: page/size -----
     let page = 1;
     let all = [];
+    let lastFirstId = null;
+    let stagnationHits = 0;
+
+    console.log(`[bookings] aggregate mode from=${from} to=${to} size=${size}`);
+
     while (true) {
       const url = new URL(LODGIFY_API_BASE + "/v2/reservations/bookings");
       if (from) url.searchParams.set("from", from);
@@ -218,36 +225,103 @@ app.get("/api/lodgify/bookings", async (req, res) => {
       url.searchParams.set("page", String(page));
       url.searchParams.set("size", String(size));
 
-      const r = await fetchWithTimeout(url.toString(), {
-        headers: { "X-ApiKey": LODGIFY_API_KEY, "Accept": "application/json" },
-      }, LODGIFY_TIMEOUT_MS);
-
+      const target = url.toString();
+      const r = await fetchWithTimeout(target, { headers }, LODGIFY_TIMEOUT_MS);
       const txt = await r.text();
+
       if (!r.ok) {
+        console.error("[bookings] lodgify error:", r.status, txt?.slice?.(0, 200));
         return res.status(r.status).type("text/plain").send(txt);
       }
 
       const data = JSON.parse(txt);
       const items = Array.isArray(data.items) ? data.items : [];
+
+      const firstId = items?.[0]?.id ?? null;
+      console.log(`[bookings] page/size page=${page} got=${items.length} firstId=${firstId}`);
+
+      // Si Lodgify ignora "page" y siempre regresa lo mismo, detectamos estancamiento
+      if (firstId && lastFirstId && firstId === lastFirstId) {
+        stagnationHits += 1;
+      } else {
+        stagnationHits = 0;
+      }
+      lastFirstId = firstId;
+
       all.push(...items);
 
-      // corte
+      // Cortes normales
       if (items.length === 0) break;
       if (items.length < size) break;
 
-      page += 1;
+      // Si se estanca 2 veces seguidas, saltamos a estrategia offset/limit
+      if (stagnationHits >= 2) {
+        console.warn("[bookings] page/size seems ignored -> switching to offset/limit fallback");
+        all = []; // reseteamos y reintentamos con offset
+        break;
+      }
 
-      // safety brake (evitar loops infinitos si algo raro pasa)
-      if (page > 2000) break;
+      page += 1;
+      if (page > 5000) {
+        console.warn("[bookings] safety break page>5000");
+        break;
+      }
     }
 
-    return res.json({ ok: true, items: all, total: all.length });
+    // Si ya juntamos algo y no fue fallback, devolvemos
+    if (all.length > 0) {
+      return res.json({ ok: true, mode: "page/size", items: all, total: all.length });
+    }
+
+    // ----- B) Fallback: offset/limit -----
+    let offset = 0;
+    let limit = size;
+    let all2 = [];
+    let safety = 0;
+
+    while (true) {
+      const url = new URL(LODGIFY_API_BASE + "/v2/reservations/bookings");
+      if (from) url.searchParams.set("from", from);
+      if (to) url.searchParams.set("to", to);
+      url.searchParams.set("offset", String(offset));
+      url.searchParams.set("limit", String(limit));
+
+      const target = url.toString();
+      const r = await fetchWithTimeout(target, { headers }, LODGIFY_TIMEOUT_MS);
+      const txt = await r.text();
+
+      if (!r.ok) {
+        console.error("[bookings] lodgify error (offset):", r.status, txt?.slice?.(0, 200));
+        return res.status(r.status).type("text/plain").send(txt);
+      }
+
+      const data = JSON.parse(txt);
+      const items = Array.isArray(data.items) ? data.items : [];
+
+      const firstId = items?.[0]?.id ?? null;
+      console.log(`[bookings] offset/limit offset=${offset} got=${items.length} firstId=${firstId}`);
+
+      all2.push(...items);
+
+      if (items.length === 0) break;
+      if (items.length < limit) break;
+
+      offset += limit;
+
+      safety += 1;
+      if (safety > 20000) {
+        console.warn("[bookings] safety break (offset)");
+        break;
+      }
+    }
+
+    return res.json({ ok: true, mode: "offset/limit", items: all2, total: all2.length });
+
   } catch (e) {
     console.error(e);
     res.status(500).json({ ok: false, error: "lodgify_bookings_failed", message: e.message });
   }
 });
-
 
 // ✅ Error handler (incluye errores de CORS)
 app.use((err, req, res, next) => {
