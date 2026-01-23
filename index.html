@@ -1,5 +1,4 @@
 
-
 <!doctype html>
 <html lang="es">
 <head>
@@ -549,7 +548,9 @@
   margin-top:12px;
   border:1px solid rgba(255,255,255,.10);
   border-radius: 16px;
-  overflow:hidden;
+  /* scroll para listas largas */
+  overflow:auto;
+  max-height: 55vh;
   background: rgba(255,255,255,.02);
 }
 #resvOverlay table{ width:100%; border-collapse:collapse; font-size:13px; }
@@ -3773,18 +3774,9 @@ function getFilterSummary(){
     </div>
 
     <div class="resvBody">
-      <div class="gridFilters">
-        <label><span>Desde</span><input id="resvFrom" type="date"></label>
-        <label><span>Hasta</span><input id="resvTo" type="date"></label>
-        <label><span>Alojamiento</span><select id="resvProperty"><option value="">Todos</option></select></label>
-        <label><span>Estatus</span>
-          <select id="resvStatusSel">
-            <option value="">Todos</option>
-            <option value="confirmed">Confirmada</option>
-            <option value="cancelled">Cancelada</option>
-          </select>
-        </label>
-        <button id="resvRun" class="actBtn" type="button">Consultar</button>
+      <!-- Sin filtros: traer TODO lo disponible -->
+      <div class="gridFilters" style="grid-template-columns: 1fr;">
+        <button id="resvRun" class="actBtn" type="button">Cargar todas las reservas</button>
       </div>
 
       <div class="kpis">
@@ -3802,7 +3794,7 @@ function getFilterSummary(){
             </tr>
           </thead>
           <tbody id="resvTbody">
-            <tr><td colspan="7" class="muted">Pulsa “Consultar” para traer reservas.</td></tr>
+            <tr><td colspan="7" class="muted">Pulsa “Cargar todas las reservas” para traer la lista completa.</td></tr>
           </tbody>
         </table>
       </div>
@@ -3975,22 +3967,11 @@ function getFilterSummary(){
   }
 
   async function runBookings(){
-    const from = $("resvFrom")?.value || "";
-    const to = $("resvTo")?.value || "";
-    const prop = $("resvProperty")?.value || "";
-    const st = $("resvStatusSel")?.value || "";
-
     setText("resvStatus","Consultando reservas…");
     setHtml("resvTbody", '<tr><td colspan="7" class="muted">Cargando…</td></tr>');
 
-    const qs = new URLSearchParams();
-    // backend passes query through; keep generic names the Lodgify API might accept
-    if(from) qs.set("from", from);
-    if(to) qs.set("to", to);
-    if(prop) qs.set("propertyId", prop);
-    if(st) qs.set("status", st);
-
-    const url = api("/api/lodgify/bookings") + (qs.toString() ? ("&"+qs.toString()) : "");
+    // all=1 => backend ignora filtros y pagina hasta traer TODO
+    const url = api("/api/lodgify/bookings") + "&all=1";
     const {ok,status,json,text} = await safeFetchJson(url);
     $("resvDebug").textContent = text || JSON.stringify(json,null,2);
 
